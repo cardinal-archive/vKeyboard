@@ -15,9 +15,38 @@ document.getElementById('octave-up').addEventListener('click', () => {
 });
 
 document.querySelectorAll('.white-key, .black-key').forEach(key => {
-    key.addEventListener('click', () => {
+    let oscillator;
+
+    key.addEventListener('mousedown', () => {
         playNote(key.dataset.note);
     });
+
+    key.addEventListener('mouseup', () => {
+        stopNote();
+    });
+
+    key.addEventListener('mouseleave', () => {
+        stopNote();
+    });
+
+    function playNote(note) {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.frequency.setValueAtTime(getFrequency(note), audioContext.currentTime);
+        oscillator.start();
+        key.oscillator = oscillator;
+        key.gainNode = gainNode;
+    }
+
+    function stopNote() {
+        if (oscillator) {
+            key.gainNode.gain.exponentialRampToValueAtTime(0.00001, key.oscillator.context.currentTime + 0.03);
+            oscillator.stop(key.oscillator.context.currentTime + 0.03);
+        }
+    }
 });
 
 function updateKeys() {
@@ -25,17 +54,6 @@ function updateKeys() {
         let note = key.dataset.note;
         key.dataset.note = note.slice(0, -1) + currentOctave;
     });
-}
-
-function playNote(note) {
-    let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    let oscillator = audioContext.createOscillator();
-    let gainNode = audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    oscillator.frequency.setValueAtTime(getFrequency(note), audioContext.currentTime);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 1);
 }
 
 function getFrequency(note) {
