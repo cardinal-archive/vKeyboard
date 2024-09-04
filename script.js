@@ -4,7 +4,7 @@ const notes = {
     'D4': 'audio/D4.mp3',
     'D#4': 'audio/Dsharp4.mp3',
     'E4': 'audio/E4.mp3',
-    'F4': 'audio/F.mp3',
+    'F4': 'audio/F4.mp3',
     'F#4': 'audio/Fsharp4.mp3',
     'G4': 'audio/G4.mp3',
     'G#4': 'audio/Gsharp4.mp3',
@@ -31,10 +31,8 @@ const keyMappings = {
 };
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-const gainNode = audioContext.createGain();
-gainNode.connect(audioContext.destination);
-
 const audioBuffers = {};
+const pressedKeys = new Set(); // To keep track of currently pressed keys
 
 // Preload and decode audio files
 const preloadAudio = async () => {
@@ -51,7 +49,7 @@ const playNote = (note) => {
     if (audioBuffers[note]) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[note];
-        source.connect(gainNode);  // Connect source to gainNode
+        source.connect(audioContext.destination);
         source.start(0);
         highlightKey(note);
     }
@@ -68,18 +66,42 @@ const highlightKey = (note) => {
 };
 
 document.querySelectorAll('.key').forEach(key => {
-    key.addEventListener('mousedown', () => playNote(key.dataset.note));
-    key.addEventListener('mouseup', () => key.classList.remove('active'));
+    key.addEventListener('mousedown', () => {
+        playNote(key.dataset.note);
+        pressedKeys.add(key.dataset.note);
+    });
+    key.addEventListener('mouseup', () => {
+        key.classList.remove('active');
+        pressedKeys.delete(key.dataset.note);
+    });
 });
 
 document.addEventListener('keydown', (event) => {
+    if (document.activeElement.tagName === 'INPUT') return; // Ignore if an input field is focused
+
+    const note = keyMappings[event.code];
+    if (note && !pressedKeys.has(note)) {
+        playNote(note);
+        pressedKeys.add(note);
+    }
+});
+
+document.addEventListener('keyup', (event) => {
     const note = keyMappings[event.code];
     if (note) {
-        playNote(note);
+        document.querySelectorAll('.key').forEach(key => {
+            if (key.dataset.note === note) {
+                key.classList.remove('active');
+            }
+        });
+        pressedKeys.delete(note);
     }
 });
 
 document.getElementById('volume').addEventListener('input', (event) => {
     const volume = event.target.value;
-    gainNode.gain.value = volume;  // Adjust gain (volume) based on slider
+    // Adjust volume using GainNode
+    const gainNode = audioContext.createGain();
+    gainNode.gain.value = volume;
+    audioContext.destination.connect(gainNode);
 });
