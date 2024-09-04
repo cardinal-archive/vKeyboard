@@ -25,8 +25,8 @@ const notes = {
 
 const keyMappings = {
     'KeyA': 'B3',
-    'KeyS': 'C3',
-    'KeyE': 'C#3',
+    'KeyS': 'C4',
+    'KeyE': 'C#4',
     'KeyD': 'D4',
     'KeyR': 'D#4',
     'KeyF': 'E4',
