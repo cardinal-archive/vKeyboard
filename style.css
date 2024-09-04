@@ -16,12 +16,14 @@ body {
 .piano {
     display: flex;
     justify-content: center;
+    margin-bottom: 20px;
+    position: relative;
 }
 
 .key {
     width: 50px;
     height: 200px;
-    margin: 1px;
+    margin: 0;
     border: 1px solid black;
     position: relative;
 }
@@ -35,17 +37,17 @@ body {
     height: 120px;
     background: black;
     position: absolute;
-    left: 35px;
     z-index: 1;
 }
 
 .controls {
-    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
-#sustain-button {
+#sustain-button, #octave-up, #octave-down {
     padding: 10px 20px;
     font-size: 16px;
+    margin: 5px;
 }
 
 #volume-control {
