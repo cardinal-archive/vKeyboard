@@ -99,7 +99,9 @@ const handleKeyPress = (note) => {
 
 const handleKeyRelease = (note) => {
     pressedKeys.delete(note);
-    highlightKey(null); // Remove all highlights when any key is released
+    if (pressedKeys.size === 0) {
+        highlightKey(null); // Remove all highlights when no keys are pressed
+    }
 };
 
 document.querySelectorAll('.key').forEach(key => {
