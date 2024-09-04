@@ -38,11 +38,11 @@ const keyMappings = {
     'KeyK': 'A4',
     'KeyO': 'A#4',
     'KeyL': 'B5',
-    'KeySemicolon': 'C5',
-    'KeyBracketLeft': 'C#5',
-    'KeyQuote': 'D5',  
-    'KeyRightBracket': 'D#5',
-    'KeyBackSlash': 'E5',
+    'Semicolon': 'C5',
+    'BracketLeft': 'C#5',
+    'Quote': 'D5',  
+    'RightBracket': 'D#5',
+    'BackSlash': 'E5',
 };
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
