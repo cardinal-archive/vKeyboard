@@ -150,7 +150,7 @@ const startStopMetronome = () => {
 };
 
 document.getElementById('metronome-toggle').addEventListener('click', startStopMetronome);
-});
+);
 
 document.addEventListener('keydown', handleKeyDown);
 document.addEventListener('keyup', handleKeyUp);
