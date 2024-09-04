@@ -44,7 +44,7 @@ const keyMappings = {
     'Semicolon': 'D5',  
     'BracketLeft': 'D#5',
     'Quote': 'E5',
-    'Backslash': 'F5",
+    'Backslash': 'F5',
 };
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
