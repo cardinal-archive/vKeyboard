@@ -130,7 +130,7 @@ document.getElementById('volume').addEventListener('input', (event) => {
     }
 });
 // Metronome button logic
-document.getElementById('metronomeButton').addEventListener('click', () => {
+document.getElementById('metronome-toggle').addEventListener('click', () => {
     playMetronome();
 });
 
