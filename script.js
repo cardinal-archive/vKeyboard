@@ -19,7 +19,7 @@ const notes = {
     'D5': 'audio/D5.mp3',
     'D#5': 'audio/Dsharp5.mp3',
     'E5': 'audio/E5.mp3',
-    'F5': 'audio/F5.mp3'
+    'F5': 'audio/F5.mp3',
     'metronome': 'metronome.mp3',
 };
 
@@ -60,15 +60,24 @@ const preloadAudio = async () => {
 };
 preloadAudio();
 
+const gainNode = audioContext.createGain();
+gainNode.connect(audioContext.destination);
+
 const playNote = (note) => {
     if (audioBuffers[note]) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[note];
-        source.connect(audioContext.destination);
+        source.connect(gainNode);  // Connect to gainNode instead of directly to destination
         source.start(0);
         highlightKey(note);
     }
 };
+
+document.getElementById('volume').addEventListener('input', (event) => {
+    const volume = event.target.value;
+    gainNode.gain.value = volume;
+});
+
 
 const highlightKey = (note) => {
     document.querySelectorAll('.key').forEach(key => {
