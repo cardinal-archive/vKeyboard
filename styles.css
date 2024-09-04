@@ -7,9 +7,14 @@ body {
     font-family: Arial, sans-serif;
 }
 
-.piano {
-    display: flex;
+.piano-container {
+    overflow-x: auto;
+    white-space: nowrap;
     margin-top: 20px;
+}
+
+.piano {
+    display: inline-flex;
     position: relative;
 }
 
@@ -18,6 +23,7 @@ body {
     height: 200px;
     border: 1px solid black;
     position: relative;
+    display: inline-block;
 }
 
 .key.white {
@@ -70,12 +76,17 @@ body {
     align-items: center;
 }
 
-.volume-control {
-    margin-bottom: 10px;
-}
-
 .metronome-control {
+    margin-top: 10px;
     display: flex;
     align-items: center;
-    gap: 10px;
+}
+
+.volume-control {
+    display: flex;
+    align-items: center;
+}
+
+input[type="range"] {
+    margin-left: 10px;
 }
