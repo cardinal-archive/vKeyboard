@@ -1,4 +1,7 @@
 const notes = {
+    'A3': 'audio/A3.mp3',
+    'A#3': 'audio/Asharp3.mp3',
+    'B3': 'audio/B3.mp3',
     'C4': 'audio/C4.mp3',
     'C#4': 'audio/Csharp4.mp3',
     'D4': 'audio/D4.mp3',
@@ -12,37 +15,34 @@ const notes = {
     'A#4': 'audio/Asharp4.mp3',
     'B4': 'audio/B4.mp3',
     'C5': 'audio/C5.mp3',
-    'A3': 'audio/A3.mp3',
-    'A#3': 'audio/Asharp3.mp3',
-    'B3': 'audio/B3.mp3',
     'C#5': 'audio/Csharp5.mp3',
     'D5': 'audio/D5.mp3',
     'D#5': 'audio/Dsharp5.mp3',
     'E5': 'audio/E5.mp3',
-    'metronome': 'audio/metronome.mp3',
+    'metronome': 'metronome.mp3',
 };
 
 const keyMappings = {
-    'KeyQ': 'A3',
-    'Digit2': 'A#3',
-    'KeyW': 'B3',
-    'KeyA': 'C4',
-    'KeyW': 'C#4',
-    'KeyS': 'D4',
-    'KeyE': 'D#4',
-    'KeyD': 'E4',
-    'KeyF': 'F4',
-    'KeyT': 'F#4',
-    'KeyG': 'G4',
-    'KeyY': 'G#4',
-    'KeyH': 'A4',
-    'KeyU': 'A#4',
-    'KeyJ': 'B4',
-    'KeyK': 'C5',
-    'KeyL': 'C#5',
-    'KeyO': 'D5',
-    'KeyP': 'D#5',
-    'KeyN': 'E5',
+    'KeyA': 'A3',
+    'KeyW': 'A#3',
+    'KeyS': 'B3',
+    'KeyD': 'C4',
+    'KeyR': 'C#4',
+    'KeyF': 'D4',
+    'KeyT': 'D#4',
+    'KeyG': 'E4',
+    'KeyH': 'F4',
+    'KeyU': 'F#4',
+    'KeyJ': 'G4',
+    'KeyI': 'G#4',
+    'KeyK': 'A4',
+    'KeyO': 'A#4',
+    'KeyL': 'B5',
+    'KeySemicolon': 'C5',
+    'KeyBracketLeft': 'C#5',
+    'KeyQuote': 'D5',  
+    'KeyRightBracket': 'D#5',
+    'KeyBackSlash': 'E5',
 };
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -51,12 +51,8 @@ const audioBuffers = {};
 const preloadAudio = async () => {
     const fetchPromises = Object.keys(notes).map(async note => {
         const response = await fetch(notes[note]);
-        if (response.ok) {
-            const arrayBuffer = await response.arrayBuffer();
-            audioBuffers[note] = await audioContext.decodeAudioData(arrayBuffer);
-        } else {
-            console.error(`Failed to load ${notes[note]}`);
-        }
+        const arrayBuffer = await response.arrayBuffer();
+        audioBuffers[note] = await audioContext.decodeAudioData(arrayBuffer);
     });
     await Promise.all(fetchPromises);
 };
@@ -66,10 +62,7 @@ const playNote = (note) => {
     if (audioBuffers[note]) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[note];
-        const gainNode = audioContext.createGain();
-        gainNode.gain.value = document.getElementById('volume').value; // Set volume based on slider
-        source.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        source.connect(audioContext.destination);
         source.start(0);
         highlightKey(note);
     }
@@ -108,40 +101,9 @@ document.addEventListener('keyup', (event) => {
     }
 });
 
-let metronomeInterval;
-const metronomeButton = document.getElementById('metronome-toggle');
-const bpmInput = document.getElementById('bpm');
-
-const startMetronome = () => {
-    const bpm = parseInt(bpmInput.value, 10);
-    const interval = 60000 / bpm; // Calculate interval in milliseconds
-    metronomeInterval = setInterval(() => {
-        playMetronomeSound();
-    }, interval);
-    metronomeButton.textContent = 'Stop';
-};
-
-const stopMetronome = () => {
-    clearInterval(metronomeInterval);
-    metronomeButton.textContent = 'Start';
-};
-
-metronomeButton.addEventListener('click', () => {
-    if (metronomeButton.textContent === 'Start') {
-        startMetronome();
-    } else {
-        stopMetronome();
-    }
+document.getElementById('volume').addEventListener('input', (event) => {
+    const volume = event.target.value;
+    audioContext.destination.gain.value = volume;
 });
 
-const playMetronomeSound = () => {
-    if (audioBuffers['C4']) { // Use a note sound for metronome tick
-        const source = audioContext.createBufferSource();
-        source.buffer = audioBuffers['C4']; // You can replace this with a specific metronome sound
-        const gainNode = audioContext.createGain();
-        gainNode.gain.value = document.getElementById('volume').value; // Set volume based on slider
-        source.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        source.start(0);
-    }
-};
+// Metronome related code
