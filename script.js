@@ -39,7 +39,7 @@ const keyMappings = {
     'KeyK': 'B4',
     'KeyL': 'C5',
     'KeyP': 'C#5',
-    'Semicolon': 'D5',
+    'Semicolon': 'D5',  
     'BracketLeft': 'D#5',
     'Quote': 'E5',
     'Backslash': 'F5',
@@ -47,7 +47,6 @@ const keyMappings = {
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
-const pressedKeys = new Set(); // Track currently pressed keys
 
 const preloadAudio = async () => {
     const fetchPromises = Object.keys(notes).map(async note => {
@@ -66,7 +65,7 @@ const playNote = (note) => {
     if (audioBuffers[note]) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[note];
-        source.connect(gainNode);  // Connect to gainNode instead of directly to destination
+        source.connect(gainNode);
         source.start(0);
         highlightKey(note);
     }
@@ -83,47 +82,35 @@ const highlightKey = (note) => {
 };
 
 const debounce = (func, delay) => {
-    let timeout;
+    let timeoutId;
     return (...args) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func(...args), delay);
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func(...args), delay);
     };
 };
 
-const handleKeyPress = (note) => {
-    if (!pressedKeys.has(note)) {
-        pressedKeys.add(note);
-        playNote(note);
-    }
-};
-
-const handleKeyRelease = (note) => {
-    pressedKeys.delete(note);
-    if (pressedKeys.size === 0) {
-        highlightKey(null); // Remove all highlights when no keys are pressed
-    }
-};
+const debouncedPlayNote = debounce(playNote, 100); // Adjust debounce time as needed
 
 document.querySelectorAll('.key').forEach(key => {
-    key.addEventListener('mousedown', () => {
-        handleKeyPress(key.dataset.note);
-    });
-    key.addEventListener('mouseup', () => {
-        handleKeyRelease(key.dataset.note);
-    });
+    key.addEventListener('mousedown', () => debouncedPlayNote(key.dataset.note));
+    key.addEventListener('mouseup', () => key.classList.remove('active'));
 });
 
-document.addEventListener('keydown', debounce((event) => {
+document.addEventListener('keydown', (event) => {
     const note = keyMappings[event.code];
     if (note) {
-        handleKeyPress(note);
+        debouncedPlayNote(note);
     }
-}, 100)); // Adjust debounce delay as needed
+});
 
 document.addEventListener('keyup', (event) => {
     const note = keyMappings[event.code];
     if (note) {
-        handleKeyRelease(note);
+        document.querySelectorAll('.key').forEach(key => {
+            if (key.dataset.note === note) {
+                key.classList.remove('active');
+            }
+        });
     }
 });
 
