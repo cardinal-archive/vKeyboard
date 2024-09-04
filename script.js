@@ -31,10 +31,9 @@ const keyMappings = {
 };
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-const gainNode = audioContext.createGain();
-gainNode.connect(audioContext.destination);
-
 const audioBuffers = {};
+let gainNode = audioContext.createGain();
+gainNode.connect(audioContext.destination);
 
 // Preload and decode audio files
 const preloadAudio = async () => {
@@ -51,7 +50,7 @@ const playNote = (note) => {
     if (audioBuffers[note]) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[note];
-        source.connect(gainNode); // Connect source to GainNode
+        source.connect(gainNode);  // Connect source to gainNode
         source.start(0);
         highlightKey(note);
     }
@@ -72,14 +71,24 @@ document.querySelectorAll('.key').forEach(key => {
     key.addEventListener('mouseup', () => key.classList.remove('active'));
 });
 
+const activeNotes = new Set();  // Track currently active notes
+
 document.addEventListener('keydown', (event) => {
     const note = keyMappings[event.code];
-    if (note) {
+    if (note && !activeNotes.has(note)) {
         playNote(note);
+        activeNotes.add(note);
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    const note = keyMappings[event.code];
+    if (note) {
+        activeNotes.delete(note);
     }
 });
 
 document.getElementById('volume').addEventListener('input', (event) => {
-    const volume = parseFloat(event.target.value);
-    gainNode.gain.value = volume;
+    const volume = event.target.value;  // Volume from the slider
+    gainNode.gain.value = volume;  // Set gainNode volume
 });
