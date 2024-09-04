@@ -81,6 +81,15 @@ const highlightKeys = () => {
         }
     });
 };
+//metronome
+const playMetronome = () => {
+    if (audioBuffers['metronome']) {
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffers['metronome'];
+        source.connect(gainNode);
+        source.start(0);
+    }
+};
 
 const handleKeyDown = (event) => {
     const note = keyMappings[event.code];
@@ -119,6 +128,10 @@ document.getElementById('volume').addEventListener('input', (event) => {
     if (gainNode) {
         gainNode.gain.value = event.target.value;
     }
+});
+// Metronome button logic
+document.getElementById('metronomeButton').addEventListener('click', () => {
+    playMetronome();
 });
 
 document.addEventListener('keydown', handleKeyDown);
