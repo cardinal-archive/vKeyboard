@@ -101,4 +101,5 @@ const gainNode = audioContext.createGain();
 gainNode.connect(audioContext.destination);
 
 volumeControl.addEventListener('input', (event) => {
-    gainNode.gain
+    gainNode.gain.value = event.target.value;
+});
