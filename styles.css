@@ -66,23 +66,23 @@ h1 {
 }
 
 .black-key:nth-child(2) {
-    left: 45px;
+    left: 45px; /* Between C and D */
 }
 
 .black-key:nth-child(4) {
-    left: 135px;
+    left: 105px; /* Between D and E */
 }
 
 .black-key:nth-child(7) {
-    left: 285px;
+    left: 225px; /* Between F and G */
 }
 
 .black-key:nth-child(9) {
-    left: 375px;
+    left: 285px; /* Between G and A */
 }
 
 .black-key:nth-child(11) {
-    left: 465px;
+    left: 345px; /* Between A and B */
 }
 
 .white-key:active, .black-key:active {
