@@ -12,7 +12,7 @@ const notes = {
     'A#4': 'audio/Asharp4.mp3',
     'B4': 'audio/B4.mp3',
     'C5': 'audio/C5.mp3',
-    'metronome': 'audio/metronome.mp3',
+    'metronome': 'audio/metronome.mp3'  // New metronome sound
 };
 
 const keyMappings = {
@@ -33,12 +33,20 @@ const keyMappings = {
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
+const gainNode = audioContext.createGain();
+gainNode.connect(audioContext.destination);
 
+// Preload and decode audio files
 const preloadAudio = async () => {
     const fetchPromises = Object.keys(notes).map(async note => {
-        const response = await fetch(notes[note]);
-        const arrayBuffer = await response.arrayBuffer();
-        audioBuffers[note] = await audioContext.decodeAudioData(arrayBuffer);
+        try {
+            const response = await fetch(notes[note]);
+            if (!response.ok) throw new Error(`Failed to load ${notes[note]}`);
+            const arrayBuffer = await response.arrayBuffer();
+            audioBuffers[note] = await audioContext.decodeAudioData(arrayBuffer);
+        } catch (error) {
+            console.error(error);
+        }
     });
     await Promise.all(fetchPromises);
 };
@@ -48,9 +56,21 @@ const playNote = (note) => {
     if (audioBuffers[note]) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[note];
-        source.connect(audioContext.destination);
+        source.connect(gainNode);
         source.start(0);
         highlightKey(note);
+    }
+};
+
+const playMetronomeSound = () => {
+    const metronomeNote = 'metronome'; // Use the key for the new metronome sound
+    if (audioBuffers[metronomeNote]) {
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffers[metronomeNote];
+        source.connect(gainNode);  // Ensure the metronome sound also goes through the gain node
+        source.start(0);
+    } else {
+        console.error(`No audio buffer for metronome note: ${metronomeNote}`);
     }
 };
 
@@ -77,35 +97,26 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.getElementById('volume').addEventListener('input', (event) => {
-    const volume = event.target.value;
-    if (audioContext && audioContext.destination) {
-        const gainNode = audioContext.createGain();
-        gainNode.gain.value = volume;
-        gainNode.connect(audioContext.destination);
-    }
+    const volume = parseFloat(event.target.value);
+    gainNode.gain.value = volume;
 });
 
-const metronomeButton = document.getElementById('metronome-toggle');
-const bpmInput = document.getElementById('bpm');
-let metronomeInterval = null;
+const metronomeInterval = 60000 / 120; // Default to 120 BPM
+let metronomeTimer;
+let isMetronomeRunning = false;
 
-const toggleMetronome = () => {
-    if (metronomeInterval) {
-        clearInterval(metronomeInterval);
-        metronomeInterval = null;
-        metronomeButton.textContent = 'Start';
-        console.log('Metronome stopped');
+const startStopMetronome = () => {
+    if (isMetronomeRunning) {
+        clearInterval(metronomeTimer);
+        isMetronomeRunning = false;
+        document.getElementById('metronome-toggle').textContent = 'Start Metronome';
     } else {
-        const bpm = parseInt(bpmInput.value, 10) || 120;
+        const bpm = parseInt(document.getElementById('bpm').value, 10) || 120;
         const interval = 60000 / bpm;
-        metronomeInterval = setInterval(() => {
-            console.log('Metronome tick');
-            playNote('metronome');  // Ensure this note is correctly loaded
-        }, interval);
-        metronomeButton.textContent = 'Stop';
-        console.log('Metronome started with interval:', interval);
+        metronomeTimer = setInterval(playMetronomeSound, interval);
+        isMetronomeRunning = true;
+        document.getElementById('metronome-toggle').textContent = 'Stop Metronome';
     }
 };
 
-
-metronomeButton.addEventListener('click', toggleMetronome);
+document.getElementById('metronome-toggle').addEventListener('click', startStopMetronome);
