@@ -1,17 +1,13 @@
 let currentOctave = 3;
 
 document.getElementById('octave-down').addEventListener('click', () => {
-    if (currentOctave > 1) {
-        currentOctave--;
-        updateKeys();
-    }
+    if (currentOctave > 1) currentOctave--;
+    updateKeys();
 });
 
 document.getElementById('octave-up').addEventListener('click', () => {
-    if (currentOctave < 7) {
-        currentOctave++;
-        updateKeys();
-    }
+    if (currentOctave < 7) currentOctave++;
+    updateKeys();
 });
 
 document.querySelectorAll('.white-key, .black-key').forEach(key => {
@@ -21,13 +17,8 @@ document.querySelectorAll('.white-key, .black-key').forEach(key => {
         playNote(key.dataset.note);
     });
 
-    key.addEventListener('mouseup', () => {
-        stopNote();
-    });
-
-    key.addEventListener('mouseleave', () => {
-        stopNote();
-    });
+    key.addEventListener('mouseup', stopNote);
+    key.addEventListener('mouseleave', stopNote);
 
     function playNote(note) {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
