@@ -5,6 +5,8 @@ body {
     background-color: #2c2c2c;
     color: white;
     font-family: Arial, sans-serif;
+    margin: 0; /* Ensure no default margins */
+    padding: 0; /* Ensure no default padding */
 }
 
 .piano {
@@ -64,21 +66,19 @@ body {
 }
 
 .controls {
-    margin-top: 20px;
+    position: fixed; /* Fixes position relative to viewport */
+    right: 20px; /* Adjust distance from the right edge */
+    top: 20px; /* Adjust distance from the top edge */
     display: flex;
+    flex-direction: column;
     align-items: center;
+    z-index: 10; /* Ensure it is above other elements */
 }
 
 .volume-control {
-    margin-right: 20px;
-}
-
-.metronome-control {
-    display: flex;
-    align-items: center;
+    margin-bottom: 10px; /* Space between volume and metronome controls */
 }
 
 #bpm {
-    margin-left: 10px;
-    width: 80px;
+    width: 80px; /* Adjust width as needed */
 }
