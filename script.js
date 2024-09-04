@@ -16,6 +16,7 @@ const keyMappings = {
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
+const activeNotes = new Set();
 
 const preloadAudio = async () => {
     const fetchPromises = Object.keys(notes).map(async note => {
@@ -28,33 +29,45 @@ const preloadAudio = async () => {
 preloadAudio();
 
 const playNote = (note) => {
-    if (audioBuffers[note]) {
+    if (audioBuffers[note] && !activeNotes.has(note)) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[note];
         source.connect(audioContext.destination);
         source.start(0);
+        activeNotes.add(note);
         highlightKey(note);
     }
 };
 
-const highlightKey = (note) => {
+const stopNote = (note) => {
+    activeNotes.delete(note);
+    highlightKey(note, false);
+};
+
+const highlightKey = (note, highlight = true) => {
     document.querySelectorAll('.key').forEach(key => {
         if (key.dataset.note === note) {
-            key.classList.add('active');
-        } else {
-            key.classList.remove('active');
+            key.classList.toggle('active', highlight);
         }
     });
 };
 
 document.querySelectorAll('.key').forEach(key => {
     key.addEventListener('mousedown', () => playNote(key.dataset.note));
-    key.addEventListener('mouseup', () => key.classList.remove('active'));
+    key.addEventListener('mouseup', () => stopNote(key.dataset.note));
+    key.addEventListener('mouseleave', () => stopNote(key.dataset.note)); // Optional: stop note if mouse leaves key
 });
 
 document.addEventListener('keydown', (event) => {
     const note = keyMappings[event.code];
     if (note) {
         playNote(note);
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    const note = keyMappings[event.code];
+    if (note) {
+        stopNote(note);
     }
 });
