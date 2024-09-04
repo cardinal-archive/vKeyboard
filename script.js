@@ -32,9 +32,6 @@ const keyMappings = {
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
-const keysPressed = new Set();
-const gainNode = audioContext.createGain();
-gainNode.connect(audioContext.destination);
 
 const preloadAudio = async () => {
     const fetchPromises = Object.keys(notes).map(async note => {
@@ -44,22 +41,21 @@ const preloadAudio = async () => {
     });
     await Promise.all(fetchPromises);
 };
-
 preloadAudio();
 
 const playNote = (note) => {
     if (audioBuffers[note]) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[note];
-        source.connect(gainNode);
+        source.connect(audioContext.destination);
         source.start(0);
-        highlightKeys();
+        highlightKey(note);
     }
 };
 
-const highlightKeys = () => {
+const highlightKey = (note) => {
     document.querySelectorAll('.key').forEach(key => {
-        if (keysPressed.has(key.dataset.note)) {
+        if (key.dataset.note === note) {
             key.classList.add('active');
         } else {
             key.classList.remove('active');
@@ -67,44 +63,44 @@ const highlightKeys = () => {
     });
 };
 
-const handleKeyDown = (event) => {
-    const note = keyMappings[event.code];
-    if (note && !keysPressed.has(note)) {
-        keysPressed.add(note);
-        playNote(note);
-    }
-};
+document.querySelectorAll('.key').forEach(key => {
+    key.addEventListener('mousedown', () => playNote(key.dataset.note));
+    key.addEventListener('mouseup', () => key.classList.remove('active'));
+});
 
-const handleKeyUp = (event) => {
+document.addEventListener('keydown', (event) => {
     const note = keyMappings[event.code];
     if (note) {
-        keysPressed.delete(note);
-        highlightKeys();
+        playNote(note);
     }
-};
-
-document.querySelectorAll('.key').forEach(key => {
-    key.addEventListener('mousedown', () => {
-        if (!keysPressed.has(key.dataset.note)) {
-            keysPressed.add(key.dataset.note);
-            playNote(key.dataset.note);
-        }
-    });
-    key.addEventListener('mouseup', () => {
-        keysPressed.delete(key.dataset.note);
-        highlightKeys();
-    });
-    key.addEventListener('mouseleave', () => {
-        keysPressed.delete(key.dataset.note);
-        highlightKeys();
-    });
 });
 
 document.getElementById('volume').addEventListener('input', (event) => {
-    if (gainNode) {
-        gainNode.gain.value = event.target.value;
+    const volume = event.target.value;
+    if (audioContext && audioContext.destination) {
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = volume;
+        gainNode.connect(audioContext.destination);
     }
 });
 
-document.addEventListener('keydown', handleKeyDown);
-document.addEventListener('keyup', handleKeyUp);
+const metronomeButton = document.getElementById('metronome-toggle');
+const bpmInput = document.getElementById('bpm');
+let metronomeInterval = null;
+
+const toggleMetronome = () => {
+    if (metronomeInterval) {
+        clearInterval(metronomeInterval);
+        metronomeInterval = null;
+        metronomeButton.textContent = 'Start';
+    } else {
+        const bpm = parseInt(bpmInput.value, 10) || 120;
+        const interval = 60000 / bpm;
+        metronomeInterval = setInterval(() => {
+            playNote('C4');  // Use a metronome-specific sound if you have one
+        }, interval);
+        metronomeButton.textContent = 'Stop';
+    }
+};
+
+metronomeButton.addEventListener('click', toggleMetronome);
