@@ -23,30 +23,11 @@ const notes = {
     'metronome': 'metronome.mp3',
 };
 
-const keyMappings = {
-    'KeyA': 'B3',
-    'KeyS': 'C4',
-    'KeyE': 'C#4',
-    'KeyD': 'D4',
-    'KeyR': 'D#4',
-    'KeyF': 'E4',
-    'KeyG': 'F4',
-    'KeyY': 'F#4',
-    'KeyH': 'G4',
-    'KeyU': 'G#4',
-    'KeyJ': 'A4',
-    'KeyI': 'A#4',
-    'KeyK': 'B4',
-    'KeyL': 'C5',
-    'KeyP': 'C#5',
-    'Semicolon': 'D5',  
-    'BracketLeft': 'D#5',
-    'Quote': 'E5',
-    'Backslash': 'F5',
-};
-
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
+const keysPressed = new Set();
+const gainNode = audioContext.createGain();
+gainNode.connect(audioContext.destination);
 
 const preloadAudio = async () => {
     const fetchPromises = Object.keys(notes).map(async note => {
@@ -56,10 +37,8 @@ const preloadAudio = async () => {
     });
     await Promise.all(fetchPromises);
 };
-preloadAudio();
 
-const gainNode = audioContext.createGain();
-gainNode.connect(audioContext.destination);
+preloadAudio();
 
 const playNote = (note) => {
     if (audioBuffers[note]) {
@@ -67,13 +46,13 @@ const playNote = (note) => {
         source.buffer = audioBuffers[note];
         source.connect(gainNode);
         source.start(0);
-        highlightKey(note);
+        highlightKeys();
     }
 };
 
-const highlightKey = (note) => {
+const highlightKeys = () => {
     document.querySelectorAll('.key').forEach(key => {
-        if (key.dataset.note === note) {
+        if (keysPressed.has(key.dataset.note)) {
             key.classList.add('active');
         } else {
             key.classList.remove('active');
@@ -81,42 +60,44 @@ const highlightKey = (note) => {
     });
 };
 
-const debounce = (func, delay) => {
-    let timeoutId;
-    return (...args) => {
-        if (timeoutId) clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => func(...args), delay);
-    };
+const handleKeyDown = (event) => {
+    const note = keyMappings[event.code];
+    if (note && !keysPressed.has(note)) {
+        keysPressed.add(note);
+        playNote(note);
+    }
 };
 
-const debouncedPlayNote = debounce(playNote, 100); // Adjust debounce time as needed
+const handleKeyUp = (event) => {
+    const note = keyMappings[event.code];
+    if (note) {
+        keysPressed.delete(note);
+        highlightKeys();
+    }
+};
 
 document.querySelectorAll('.key').forEach(key => {
-    key.addEventListener('mousedown', () => debouncedPlayNote(key.dataset.note));
-    key.addEventListener('mouseup', () => key.classList.remove('active'));
-});
-
-document.addEventListener('keydown', (event) => {
-    const note = keyMappings[event.code];
-    if (note) {
-        debouncedPlayNote(note);
-    }
-});
-
-document.addEventListener('keyup', (event) => {
-    const note = keyMappings[event.code];
-    if (note) {
-        document.querySelectorAll('.key').forEach(key => {
-            if (key.dataset.note === note) {
-                key.classList.remove('active');
-            }
-        });
-    }
+    key.addEventListener('mousedown', () => {
+        if (!keysPressed.has(key.dataset.note)) {
+            keysPressed.add(key.dataset.note);
+            playNote(key.dataset.note);
+        }
+    });
+    key.addEventListener('mouseup', () => {
+        keysPressed.delete(key.dataset.note);
+        highlightKeys();
+    });
+    key.addEventListener('mouseleave', () => {
+        keysPressed.delete(key.dataset.note);
+        highlightKeys();
+    });
 });
 
 document.getElementById('volume').addEventListener('input', (event) => {
-    const volume = event.target.value;
-    gainNode.gain.value = volume;
+    if (gainNode) {
+        gainNode.gain.value = event.target.value;
+    }
 });
 
-// Metronome related code
+document.addEventListener('keydown', handleKeyDown);
+document.addEventListener('keyup', handleKeyUp);
