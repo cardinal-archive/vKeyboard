@@ -41,7 +41,7 @@ const keyMappings = {
     'KeyL': 'C5',
     'KeyP': 'C#5',
     'Semicolon': 'D5',  
-    'LeftBracket': 'D#5',
+    'BracketLeft': 'D#5',
     'Quote': 'E5',
 };
 
