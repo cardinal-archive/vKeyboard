@@ -93,14 +93,18 @@ const toggleMetronome = () => {
         clearInterval(metronomeInterval);
         metronomeInterval = null;
         metronomeButton.textContent = 'Start';
+        console.log('Metronome stopped');
     } else {
         const bpm = parseInt(bpmInput.value, 10) || 120;
         const interval = 60000 / bpm;
         metronomeInterval = setInterval(() => {
-            playNote('C4');  // Use a metronome-specific sound if you have one
+            console.log('Metronome tick');
+            playNote('C4');  // Ensure this note is correctly loaded
         }, interval);
         metronomeButton.textContent = 'Stop';
+        console.log('Metronome started with interval:', interval);
     }
 };
+
 
 metronomeButton.addEventListener('click', toggleMetronome);
