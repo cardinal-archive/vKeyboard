@@ -1,101 +1,86 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtual Piano</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #2c2c2c;
-            color: white;
-            font-family: Arial, sans-serif;
-        }
-        .piano {
-            display: flex;
-            margin-top: 20px;
-            position: relative;
-        }
-        .key {
-            width: 60px;
-            height: 200px;
-            border: 1px solid black;
-            position: relative;
-        }
-        .key.white {
-            background-color: white;
-        }
-        .key.black {
-            width: 40px;
-            height: 120px;
-            background-color: black;
-            position: absolute;
-            top: 0;
-            z-index: 2;
-        }
-        .key.white::after {
-            content: attr(data-key);
-            position: absolute;
-            bottom: 5px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: black;
-            font-size: 20px;
-            font-weight: bold;
-        }
-        .key.black::after {
-            content: attr(data-key);
-            position: absolute;
-            bottom: 5px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-        }
-        .key.active {
-            background-color: #ddd;
-        }
-        .key.black.active {
-            background-color: #555;
-        }
-        .controls {
-            margin-top: 20px;
-        }
-        .volume-control {
-            margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
-    <h1>Virtual Piano</h1>
+const notes = {
+    'C4': 'audio/C4.mp3',
+    'C#4': 'audio/Csharp4.mp3',
+    'D4': 'audio/D4.mp3',
+    'D#4': 'audio/Dsharp4.mp3',
+    'E4': 'audio/E4.mp3',
+    'F4': 'audio/F4.mp3',
+    'F#4': 'audio/Fsharp4.mp3',
+    'G4': 'audio/G4.mp3',
+    'G#4': 'audio/Gsharp4.mp3',
+    'A4': 'audio/A4.mp3',
+    'A#4': 'audio/Asharp4.mp3',
+    'B4': 'audio/B4.mp3',
+    'C5': 'audio/C5.mp3',
+};
 
-    <div class="piano">
-        <div class="key white" data-note="C4" data-key="A"></div>
-        <div class="key black" data-note="C#4" data-key="W" style="left: 40px;"></div>
-        <div class="key white" data-note="D4" data-key="S"></div>
-        <div class="key black" data-note="D#4" data-key="E" style="left: 100px;"></div>
-        <div class="key white" data-note="E4" data-key="D"></div>
-        <div class="key white" data-note="F4" data-key="F"></div>
-        <div class="key black" data-note="F#4" data-key="T" style="left: 220px;"></div>
-        <div class="key white" data-note="G4" data-key="G"></div>
-        <div class="key black" data-note="G#4" data-key="Y" style="left: 280px;"></div>
-        <div class="key white" data-note="A4" data-key="H"></div>
-        <div class="key black" data-note="A#4" data-key="U" style="left: 340px;"></div>
-        <div class="key white" data-note="B4" data-key="J"></div>
-        <div class="key white" data-note="C5" data-key="K"></div>
-    </div>
+const keyMappings = {
+    'KeyA': 'C4',
+    'KeyW': 'C#4',
+    'KeyS': 'D4',
+    'KeyE': 'D#4',
+    'KeyD': 'E4',
+    'KeyF': 'F4',
+    'KeyT': 'F#4',
+    'KeyG': 'G4',
+    'KeyY': 'G#4',
+    'KeyH': 'A4',
+    'KeyU': 'A#4',
+    'KeyJ': 'B4',
+    'KeyK': 'C5',
+};
 
-    <div class="controls">
-        <div class="volume-control">
-            <label for="volume">Volume:</label>
-            <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5">
-        </div>
-    </div>
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+const gainNode = audioContext.createGain();
+gainNode.connect(audioContext.destination);
 
-    <!-- Link to the external JavaScript file -->
-    <script src="script.js"></script>
-</body>
-</html>
+const audioBuffers = {};
+
+// Preload and decode audio files
+const preloadAudio = async () => {
+    const fetchPromises = Object.keys(notes).map(async note => {
+        const response = await fetch(notes[note]);
+        const arrayBuffer = await response.arrayBuffer();
+        audioBuffers[note] = await audioContext.decodeAudioData(arrayBuffer);
+    });
+    await Promise.all(fetchPromises);
+};
+preloadAudio();
+
+const playNote = (note) => {
+    if (audioBuffers[note]) {
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffers[note];
+        source.connect(gainNode);
+        source.start(0);
+        highlightKey(note);
+
+        source.onended = () => {
+            document.querySelectorAll('.key').forEach(key => key.classList.remove('active'));
+        };
+    }
+};
+
+const highlightKey = (note) => {
+    document.querySelectorAll('.key').forEach(key => {
+        if (key.dataset.note === note) {
+            key.classList.add('active');
+        }
+    });
+};
+
+document.querySelectorAll('.key').forEach(key => {
+    key.addEventListener('mousedown', () => playNote(key.dataset.note));
+    key.addEventListener('mouseup', () => key.classList.remove('active'));
+});
+
+document.addEventListener('keydown', (event) => {
+    const note = keyMappings[event.code];
+    if (note) {
+        playNote(note);
+    }
+});
+
+document.getElementById('volume').addEventListener('input', (event) => {
+    gainNode.gain.value = event.target.value;
+});
