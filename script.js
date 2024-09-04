@@ -31,11 +31,10 @@ const keyMappings = {
 };
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-const audioBuffers = {};
-const gainNode = audioContext.createGain(); // Create a GainNode
-
-// Connect GainNode to the audio context's destination
+const gainNode = audioContext.createGain();
 gainNode.connect(audioContext.destination);
+
+const audioBuffers = {};
 
 // Preload and decode audio files
 const preloadAudio = async () => {
@@ -82,5 +81,5 @@ document.addEventListener('keydown', (event) => {
 
 document.getElementById('volume').addEventListener('input', (event) => {
     const volume = parseFloat(event.target.value);
-    gainNode.gain.value = volume; // Adjust GainNode's gain based on the slider value
+    gainNode.gain.value = volume;
 });
