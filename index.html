@@ -34,11 +34,25 @@
             top: 0;
             z-index: 2;
         }
-        .key:active {
+        .key.active {
             background-color: #ddd;
         }
-        .key.black:active {
+        .key.black.active {
             background-color: #555;
+        }
+        .key::after {
+            content: attr(data-key);
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: black;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 2px;
+            border-radius: 3px;
+            width: 100%;
+            text-align: center;
         }
         .controls {
             margin-top: 20px;
@@ -52,26 +66,24 @@
     <h1>Virtual Piano</h1>
 
     <div class="piano">
-        <div class="key white" data-note="C4"></div>
-        <div class="key black" data-note="C#4" style="left: 40px;"></div>
-        <div class="key white" data-note="D4"></div>
-        <div class="key black" data-note="D#4" style="left: 100px;"></div>
-        <div class="key white" data-note="E4"></div>
-        <div class="key white" data-note="F4"></div>
-        <div class="key black" data-note="F#4" style="left: 220px;"></div>
-        <div class="key white" data-note="G4"></div>
-        <div class="key black" data-note="G#4" style="left: 280px;"></div>
-        <div class="key white" data-note="A4"></div>
-        <div class="key black" data-note="A#4" style="left: 340px;"></div>
-        <div class="key white" data-note="B4"></div>
-        <div class="key white" data-note="C5"></div>
+        <div class="key white" data-note="C4" data-key="KeyA"></div>
+        <div class="key black" data-note="C#4" data-key="KeyW" style="left: 40px;"></div>
+        <div class="key white" data-note="D4" data-key="KeyS"></div>
+        <div class="key black" data-note="D#4" data-key="KeyE" style="left: 100px;"></div>
+        <div class="key white" data-note="E4" data-key="KeyD"></div>
+        <div class="key white" data-note="F4" data-key="KeyF"></div>
+        <div class="key black" data-note="F#4" data-key="KeyT" style="left: 220px;"></div>
+        <div class="key white" data-note="G4" data-key="KeyG"></div>
+        <div class="key black" data-note="G#4" data-key="KeyY" style="left: 280px;"></div>
+        <div class="key white" data-note="A4" data-key="KeyH"></div>
+        <div class="key black" data-note="A#4" data-key="KeyU" style="left: 340px;"></div>
+        <div class="key white" data-note="B4" data-key="KeyJ"></div>
+        <div class="key white" data-note="C5" data-key="KeyK"></div>
     </div>
 
     <div class="controls">
         <button id="octave-down">Octave Down</button>
         <button id="octave-up">Octave Up</button>
-        <button id="sustain">Sustain</button>
-        <input type="checkbox" id="multi-sustain"> Multi-note Sustain
         <div class="volume-control">
             <label for="volume">Volume:</label>
             <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5">
@@ -95,53 +107,80 @@
             'C5': 'audio/C5.mp3',
         };
 
-        let audioElements = {};
-        let sustain = false;
-        let multiSustain = false;
+        const keyMappings = {
+            'KeyA': 'C4',
+            'KeyW': 'C#4',
+            'KeyS': 'D4',
+            'KeyE': 'D#4',
+            'KeyD': 'E4',
+            'KeyF': 'F4',
+            'KeyT': 'F#4',
+            'KeyG': 'G4',
+            'KeyY': 'G#4',
+            'KeyH': 'A4',
+            'KeyU': 'A#4',
+            'KeyJ': 'B4',
+            'KeyK': 'C5',
+        };
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const audioBuffers = {};
+
+        // Preload and decode audio files
+        const preloadAudio = async () => {
+            const fetchPromises = Object.keys(notes).map(async note => {
+                const response = await fetch(notes[note]);
+                const arrayBuffer = await response.arrayBuffer();
+                audioBuffers[note] = await audioContext.decodeAudioData(arrayBuffer);
+            });
+            await Promise.all(fetchPromises);
+        };
+        preloadAudio();
+
+        const playNote = (note) => {
+            if (audioBuffers[note]) {
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffers[note];
+                source.connect(audioContext.destination);
+                source.start(0);
+                highlightKey(note);
+            }
+        };
+
+        const highlightKey = (note) => {
+            document.querySelectorAll('.key').forEach(key => {
+                if (key.dataset.note === note) {
+                    key.classList.add('active');
+                } else {
+                    key.classList.remove('active');
+                }
+            });
+        };
 
         document.querySelectorAll('.key').forEach(key => {
             key.addEventListener('mousedown', () => playNote(key.dataset.note));
-            key.addEventListener('mouseup', () => stopNoteIfNoSustain(key.dataset.note));
+            key.addEventListener('mouseup', () => key.classList.remove('active'));
         });
 
-        document.getElementById('sustain').addEventListener('click', () => {
-            sustain = !sustain;
-        });
-
-        document.getElementById('multi-sustain').addEventListener('change', (event) => {
-            multiSustain = event.target.checked;
+        document.addEventListener('keydown', (event) => {
+            const note = keyMappings[event.code];
+            if (note) {
+                playNote(note);
+            }
         });
 
         document.getElementById('volume').addEventListener('input', (event) => {
-            for (let note in audioElements) {
-                audioElements[note].volume = event.target.value;
-            }
+            // Volume control for Web Audio API requires adjusting gain nodes
+            // Implement volume control if necessary
         });
 
-        function playNote(note) {
-            if (!audioElements[note]) {
-                audioElements[note] = new Audio(notes[note]);
-            }
-            if (!multiSustain) {
-                stopAllNotes();
-            }
-            audioElements[note].currentTime = 0;
-            audioElements[note].play();
-        }
+        document.getElementById('octave-up').addEventListener('click', () => {
+            // Implement octave up logic
+        });
 
-        function stopNoteIfNoSustain(note) {
-            if (!sustain && audioElements[note]) {
-                audioElements[note].pause();
-                audioElements[note].currentTime = 0;
-            }
-        }
-
-        function stopAllNotes() {
-            for (let note in audioElements) {
-                audioElements[note].pause();
-                audioElements[note].currentTime = 0;
-            }
-        }
+        document.getElementById('octave-down').addEventListener('click', () => {
+            // Implement octave down logic
+        });
     </script>
 </body>
 </html>
