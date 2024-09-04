@@ -89,8 +89,6 @@ const playMetronomeSound = () => {
         source.buffer = audioBuffers[metronomeNote];
         source.connect(gainNode);  // Ensure the metronome sound also goes through the gain node
         source.start(0);
-    } else {
-        console.error(`No audio buffer for metronome note: ${metronomeNote}`);
     }
 };
 
