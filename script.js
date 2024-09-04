@@ -32,7 +32,8 @@ const keyMappings = {
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
-const pressedKeys = new Set(); // To keep track of currently pressed keys
+const pressedKeys = new Set();
+let debounceTimeout;
 
 // Preload and decode audio files
 const preloadAudio = async () => {
@@ -65,6 +66,35 @@ const highlightKey = (note) => {
     });
 };
 
+const debounce = (func, delay) => {
+    return (...args) => {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => func(...args), delay);
+    };
+};
+
+const handleKeydown = debounce((event) => {
+    if (document.activeElement.tagName === 'INPUT') return; // Ignore if an input field is focused
+
+    const note = keyMappings[event.code];
+    if (note && !pressedKeys.has(note)) {
+        playNote(note);
+        pressedKeys.add(note);
+    }
+}, 100);
+
+const handleKeyup = (event) => {
+    const note = keyMappings[event.code];
+    if (note) {
+        document.querySelectorAll('.key').forEach(key => {
+            if (key.dataset.note === note) {
+                key.classList.remove('active');
+            }
+        });
+        pressedKeys.delete(note);
+    }
+};
+
 document.querySelectorAll('.key').forEach(key => {
     key.addEventListener('mousedown', () => {
         playNote(key.dataset.note);
@@ -76,27 +106,8 @@ document.querySelectorAll('.key').forEach(key => {
     });
 });
 
-document.addEventListener('keydown', (event) => {
-    if (document.activeElement.tagName === 'INPUT') return; // Ignore if an input field is focused
-
-    const note = keyMappings[event.code];
-    if (note && !pressedKeys.has(note)) {
-        playNote(note);
-        pressedKeys.add(note);
-    }
-});
-
-document.addEventListener('keyup', (event) => {
-    const note = keyMappings[event.code];
-    if (note) {
-        document.querySelectorAll('.key').forEach(key => {
-            if (key.dataset.note === note) {
-                key.classList.remove('active');
-            }
-        });
-        pressedKeys.delete(note);
-    }
-});
+document.addEventListener('keydown', handleKeydown);
+document.addEventListener('keyup', handleKeyup);
 
 document.getElementById('volume').addEventListener('input', (event) => {
     const volume = event.target.value;
