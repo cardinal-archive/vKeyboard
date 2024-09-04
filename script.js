@@ -39,7 +39,7 @@ const keyMappings = {
     'KeyK': 'B4',
     'KeyL': 'C5',
     'KeyP': 'C#5',
-    'Semicolon': 'D5',  
+    'Semicolon': 'D5',
     'BracketLeft': 'D#5',
     'Quote': 'E5',
     'Backslash': 'F5',
@@ -65,9 +65,8 @@ const playNote = (note) => {
     if (audioBuffers[note]) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[note];
-        source.connect(gainNode);  // Connect to gainNode instead of directly to destination
+        source.connect(gainNode);
         source.start(0);
-        highlightKey(note);
     }
 };
 
@@ -82,7 +81,7 @@ const highlightKey = (note) => {
     document.querySelectorAll('.key').forEach(key => {
         if (key.dataset.note === note) {
             key.classList.add('active');
-        } else {
+        } else if (!activeKeys.has(note)) {
             key.classList.remove('active');
         }
     });
@@ -93,14 +92,15 @@ document.querySelectorAll('.key').forEach(key => {
         const note = key.dataset.note;
         if (note) {
             playNote(note);
-            activeKeys.add(note); // Add to activeKeys set for mouse
+            highlightKey(note);
+            activeKeys.add(note);
         }
     });
     key.addEventListener('mouseup', () => {
         const note = key.dataset.note;
         if (note) {
-            activeKeys.delete(note); // Remove from activeKeys set for mouse
             key.classList.remove('active');
+            activeKeys.delete(note);
         }
     });
 });
@@ -108,15 +108,16 @@ document.querySelectorAll('.key').forEach(key => {
 document.addEventListener('keydown', (event) => {
     const note = keyMappings[event.code];
     if (note && !activeKeys.has(event.code)) {
-        activeKeys.add(event.code); // Add the key to the activeKeys set
+        activeKeys.add(event.code);
         playNote(note);
+        highlightKey(note);
     }
 });
 
 document.addEventListener('keyup', (event) => {
     const note = keyMappings[event.code];
     if (note) {
-        activeKeys.delete(event.code); // Remove the key from the activeKeys set
+        activeKeys.delete(event.code);
         document.querySelectorAll('.key').forEach(key => {
             if (key.dataset.note === note) {
                 key.classList.remove('active');
@@ -124,5 +125,3 @@ document.addEventListener('keyup', (event) => {
         });
     }
 });
-
-// Metronome related code
