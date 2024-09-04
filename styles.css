@@ -9,7 +9,7 @@ body {
 
 /* CSS to customize <h2> */
 h2 {
-    font-size: 16px; /* Font size */
+    font-size: 10px; /* Font size */
     font-weight: bold; /* Font weight */
     color: #C41E3A; /* Text color */
     margin-top: 2px 0; /* Margin around the heading */
@@ -23,8 +23,8 @@ h2 {
 }
 
 .heading-icon {
-    width: 16px;
-    height: 16px;
+    width: 8px;
+    height: 8px;
 }
 
 .piano {
