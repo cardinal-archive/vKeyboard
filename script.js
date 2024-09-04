@@ -23,6 +23,28 @@ const notes = {
     'metronome': 'metronome.mp3',
 };
 
+const keyMappings = {
+    'KeyA': 'B3',
+    'KeyS': 'C3',
+    'KeyE': 'C#3',
+    'KeyD': 'D4',
+    'KeyR': 'D#4',
+    'KeyF': 'E4',
+    'KeyG': 'F4',
+    'KeyY': 'F#4',
+    'KeyH': 'G4',
+    'KeyU': 'G#4',
+    'KeyJ': 'A4',
+    'KeyI': 'A#4',
+    'KeyK': 'B4',
+    'KeyL': 'C4',
+    'KeyP': 'C#4',
+    'Semicolon': 'D5',
+    'BracketLeft': 'D#5',
+    'Quote': 'E5',
+    'Backslash': 'F5',
+};
+
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
 const keysPressed = new Set();
