@@ -19,6 +19,7 @@ const notes = {
     'D5': 'audio/D5.mp3',
     'D#5': 'audio/Dsharp5.mp3',
     'E5': 'audio/E5.mp3',
+    'F5': 'audio/F5.mp3'
     'metronome': 'metronome.mp3',
 };
 
