@@ -1,3 +1,4 @@
+let audioContext;
 const notes = {
     'C4': 'audio/C4.mp3',
     'C#4': 'audio/Csharp4.mp3',
@@ -14,63 +15,73 @@ const notes = {
     'C5': 'audio/C5.mp3',
 };
 
-const keyElements = document.querySelectorAll('.key');
-const keyMappings = Array.from(keyElements).reduce((acc, key) => {
-    acc[key.dataset.key] = key;
-    return acc;
-}, {});
-
+const keys = document.querySelectorAll('.key');
 let activeNotes = {};
-let keyRepeatTimers = {};  // Track timers for rapid firing
 
-const playNote = (note) => {
-    if (!activeNotes[note]) {
-        const audio = new Audio(notes[note]);
-        activeNotes[note] = audio;
-        audio.play();
-    }
-};
-
-const stopNote = (note) => {
-    if (activeNotes[note]) {
-        activeNotes[note].pause();
-        activeNotes[note].currentTime = 0;
-        delete activeNotes[note];
-    }
-};
-
-const handleKeyDown = (event) => {
-    const keyElement = keyMappings[event.code];
-    if (keyElement && !keyElement.classList.contains('highlighted')) {
-        keyElement.classList.add('highlighted');
-        playNote(keyElement.dataset.note);
-
-        // Handle rapid firing
-        if (!keyRepeatTimers[event.code]) {
-            keyRepeatTimers[event.code] = setInterval(() => {
-                playNote(keyElement.dataset.note);
-            }, 200); // Adjust the interval for rapid firing
-        }
-    }
-};
-
-const handleKeyUp = (event) => {
-    const keyElement = keyMappings[event.code];
-    if (keyElement && keyElement.classList.contains('highlighted')) {
-        keyElement.classList.remove('highlighted');
-        stopNote(keyElement.dataset.note);
-
-        // Clear rapid firing timer
-        if (keyRepeatTimers[event.code]) {
-            clearInterval(keyRepeatTimers[event.code]);
-            delete keyRepeatTimers[event.code];
-        }
-    }
-};
-
+document.addEventListener('mousedown', initializeAudioContext);
 document.addEventListener('keydown', handleKeyDown);
 document.addEventListener('keyup', handleKeyUp);
 
-// Debugging: Logging to see if key events are being registered
-window.addEventListener('keydown', (e) => console.log(`Key down: ${e.code}`));
-window.addEventListener('keyup', (e) => console.log(`Key up: ${e.code}`));
+function initializeAudioContext() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioContext.state === 'suspended') {
+        audioContext.resume().then(() => {
+            console.log('Audio context resumed');
+        });
+    }
+}
+
+function handleKeyDown(event) {
+    if (!audioContext) {
+        initializeAudioContext();
+    }
+    const note = mapKeyToNote[event.code];
+    if (note && !activeNotes[note]) {
+        playNote(note);
+        highlightKey(note, true);
+        activeNotes[note] = true;
+    }
+}
+
+function handleKeyUp(event) {
+    const note = mapKeyToNote[event.code];
+    if (note && activeNotes[note]) {
+        stopNote(note);
+        highlightKey(note, false);
+        delete activeNotes[note];
+    }
+}
+
+function playNote(note) {
+    const audio = new Audio(notes[note]);
+    audio.play();
+}
+
+function stopNote(note) {
+    // Note stopping logic if needed
+}
+
+function highlightKey(note, highlight) {
+    const key = document.querySelector(`[data-note="${note}"]`);
+    if (key) {
+        key.classList.toggle('highlighted', highlight);
+    }
+}
+
+const mapKeyToNote = {
+    'KeyA': 'C4',
+    'KeyW': 'C#4',
+    'KeyS': 'D4',
+    'KeyE': 'D#4',
+    'KeyD': 'E4',
+    'KeyF': 'F4',
+    'KeyT': 'F#4',
+    'KeyG': 'G4',
+    'KeyY': 'G#4',
+    'KeyH': 'A4',
+    'KeyU': 'A#4',
+    'KeyJ': 'B4',
+    'KeyK': 'C5'
+};
