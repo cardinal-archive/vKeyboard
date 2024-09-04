@@ -32,8 +32,7 @@ const keyMappings = {
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
-let gainNode = audioContext.createGain();
-gainNode.connect(audioContext.destination);
+const playingNotes = new Set(); // To keep track of currently playing notes
 
 // Preload and decode audio files
 const preloadAudio = async () => {
@@ -47,12 +46,17 @@ const preloadAudio = async () => {
 preloadAudio();
 
 const playNote = (note) => {
-    if (audioBuffers[note]) {
+    if (audioBuffers[note] && !playingNotes.has(note)) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[note];
-        source.connect(gainNode);  // Connect source to gainNode
+        source.connect(audioContext.destination);
         source.start(0);
         highlightKey(note);
+        playingNotes.add(note);
+
+        source.onended = () => {
+            playingNotes.delete(note); // Remove note from set when sound ends
+        };
     }
 };
 
@@ -71,24 +75,28 @@ document.querySelectorAll('.key').forEach(key => {
     key.addEventListener('mouseup', () => key.classList.remove('active'));
 });
 
-const activeNotes = new Set();  // Track currently active notes
-
 document.addEventListener('keydown', (event) => {
     const note = keyMappings[event.code];
-    if (note && !activeNotes.has(note)) {
+    if (note) {
         playNote(note);
-        activeNotes.add(note);
     }
 });
 
 document.addEventListener('keyup', (event) => {
     const note = keyMappings[event.code];
     if (note) {
-        activeNotes.delete(note);
+        document.querySelectorAll('.key').forEach(key => {
+            if (key.dataset.note === note) {
+                key.classList.remove('active');
+            }
+        });
     }
 });
 
-document.getElementById('volume').addEventListener('input', (event) => {
-    const volume = event.target.value;  // Volume from the slider
-    gainNode.gain.value = volume;  // Set gainNode volume
+const volumeControl = document.getElementById('volume');
+const gainNode = audioContext.createGain();
+gainNode.connect(audioContext.destination); // Connect gain node to audio context
+
+volumeControl.addEventListener('input', (event) => {
+    gainNode.gain.value = event.target.value;
 });
