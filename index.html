@@ -22,10 +22,9 @@
             width: 60px;
             height: 200px;
             border: 1px solid black;
-            position: relative;
-        }
-        .key.white {
             background-color: white;
+            position: relative;
+            z-index: 1;
         }
         .key.black {
             width: 40px;
@@ -35,30 +34,10 @@
             top: 0;
             z-index: 2;
         }
-        .key.white::after {
-            content: attr(data-key);
-            position: absolute;
-            bottom: 5px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: black;
-            font-size: 20px;
-            font-weight: bold;
-        }
-        .key.black::after {
-            content: attr(data-key);
-            position: absolute;
-            bottom: 5px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-        }
-        .key.active {
+        .key:active {
             background-color: #ddd;
         }
-        .key.black.active {
+        .key.black:active {
             background-color: #555;
         }
         .controls {
@@ -67,26 +46,48 @@
         .volume-control {
             margin-top: 10px;
         }
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            opacity: 1;
+            transition: opacity 1s ease-out;
+        }
+        .play-button.fade {
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
     <h1>Virtual Piano</h1>
 
     <div class="piano">
-        <div class="key white" data-note="C4" data-key="A"></div>
-        <div class="key black" data-note="C#4" data-key="W" style="left: 40px;"></div>
-        <div class="key white" data-note="D4" data-key="S"></div>
-        <div class="key black" data-note="D#4" data-key="E" style="left: 100px;"></div>
-        <div class="key white" data-note="E4" data-key="D"></div>
-        <div class="key white" data-note="F4" data-key="F"></div>
-        <div class="key black" data-note="F#4" data-key="T" style="left: 220px;"></div>
-        <div class="key white" data-note="G4" data-key="G"></div>
-        <div class="key black" data-note="G#4" data-key="Y" style="left: 280px;"></div>
-        <div class="key white" data-note="A4" data-key="H"></div>
-        <div class="key black" data-note="A#4" data-key="U" style="left: 340px;"></div>
-        <div class="key white" data-note="B4" data-key="J"></div>
-        <div class="key white" data-note="C5" data-key="K"></div>
+        <div class="key white" data-note="C4">A</div>
+        <div class="key black" data-note="C#4" style="left: 40px;">W</div>
+        <div class="key white" data-note="D4">S</div>
+        <div class="key black" data-note="D#4" style="left: 100px;">E</div>
+        <div class="key white" data-note="E4">D</div>
+        <div class="key white" data-note="F4">F</div>
+        <div class="key black" data-note="F#4" style="left: 220px;">T</div>
+        <div class="key white" data-note="G4">G</div>
+        <div class="key black" data-note="G#4" style="left: 280px;">Y</div>
+        <div class="key white" data-note="A4">H</div>
+        <div class="key black" data-note="A#4" style="left: 340px;">U</div>
+        <div class="key white" data-note="B4">J</div>
+        <div class="key white" data-note="C5">K</div>
     </div>
+
+    <button class="play-button" id="play-button">Play</button>
 
     <div class="controls">
         <div class="volume-control">
@@ -96,6 +97,7 @@
     </div>
 
     <script>
+        let audioContext;
         const notes = {
             'C4': 'audio/C4.mp3',
             'C#4': 'audio/Csharp4.mp3',
@@ -112,7 +114,65 @@
             'C5': 'audio/C5.mp3',
         };
 
-        const keyMappings = {
+        const keys = document.querySelectorAll('.key');
+        let activeNotes = {};
+
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('keyup', handleKeyUp);
+        document.getElementById('play-button').addEventListener('click', initializeAudioContext);
+
+        function initializeAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().then(() => {
+                    console.log('Audio context resumed');
+                    document.getElementById('play-button').classList.add('fade');
+                });
+            } else {
+                document.getElementById('play-button').classList.add('fade');
+            }
+        }
+
+        function handleKeyDown(event) {
+            if (!audioContext) {
+                initializeAudioContext();
+            }
+            const note = mapKeyToNote[event.code];
+            if (note && !activeNotes[note]) {
+                playNote(note);
+                highlightKey(note, true);
+                activeNotes[note] = true;
+            }
+        }
+
+        function handleKeyUp(event) {
+            const note = mapKeyToNote[event.code];
+            if (note && activeNotes[note]) {
+                stopNote(note);
+                highlightKey(note, false);
+                delete activeNotes[note];
+            }
+        }
+
+        function playNote(note) {
+            const audio = new Audio(notes[note]);
+            audio.play();
+        }
+
+        function stopNote(note) {
+            // Note stopping logic if needed
+        }
+
+        function highlightKey(note, highlight) {
+            const key = document.querySelector(`[data-note="${note}"]`);
+            if (key) {
+                key.classList.toggle('highlighted', highlight);
+            }
+        }
+
+        const mapKeyToNote = {
             'KeyA': 'C4',
             'KeyW': 'C#4',
             'KeyS': 'D4',
@@ -125,59 +185,8 @@
             'KeyH': 'A4',
             'KeyU': 'A#4',
             'KeyJ': 'B4',
-            'KeyK': 'C5',
+            'KeyK': 'C5'
         };
-
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const audioBuffers = {};
-
-        // Preload and decode audio files
-        const preloadAudio = async () => {
-            const fetchPromises = Object.keys(notes).map(async note => {
-                const response = await fetch(notes[note]);
-                const arrayBuffer = await response.arrayBuffer();
-                audioBuffers[note] = await audioContext.decodeAudioData(arrayBuffer);
-            });
-            await Promise.all(fetchPromises);
-        };
-        preloadAudio();
-
-        const playNote = (note) => {
-            if (audioBuffers[note]) {
-                const source = audioContext.createBufferSource();
-                source.buffer = audioBuffers[note];
-                source.connect(audioContext.destination);
-                source.start(0);
-                highlightKey(note);
-            }
-        };
-
-        const highlightKey = (note) => {
-            document.querySelectorAll('.key').forEach(key => {
-                if (key.dataset.note === note) {
-                    key.classList.add('active');
-                } else {
-                    key.classList.remove('active');
-                }
-            });
-        };
-
-        document.querySelectorAll('.key').forEach(key => {
-            key.addEventListener('mousedown', () => playNote(key.dataset.note));
-            key.addEventListener('mouseup', () => key.classList.remove('active'));
-        });
-
-        document.addEventListener('keydown', (event) => {
-            const note = keyMappings[event.code];
-            if (note) {
-                playNote(note);
-            }
-        });
-
-        document.getElementById('volume').addEventListener('input', (event) => {
-            // Volume control for Web Audio API requires adjusting gain nodes
-            // Implement volume control if necessary
-        });
     </script>
 </body>
 </html>
