@@ -1,57 +1,67 @@
-let currentOctave = 3;
+// script.js
+const notes = {
+    'C3': 'path_to_C3.mp3',
+    'C#3': 'path_to_Csharp3.mp3',
+    'D3': 'path_to_D3.mp3',
+    // Add paths for all notes
+};
 
-document.getElementById('octave-down').addEventListener('click', () => {
-    if (currentOctave > 1) currentOctave--;
-    updateKeys();
-});
+const keys = document.querySelectorAll('.key');
+const sustainButton = document.getElementById('sustain-button');
+const volumeControl = document.getElementById('volume-control');
 
-document.getElementById('octave-up').addEventListener('click', () => {
-    if (currentOctave < 7) currentOctave++;
-    updateKeys();
-});
+let isSustaining = false;
+let sustainedNotes = new Set();
+let volume = 0.5; // Default volume
 
-document.querySelectorAll('.white-key, .black-key').forEach(key => {
-    let oscillator;
+const playNote = (note) => {
+    const audio = new Audio(notes[note]);
+    audio.volume = volume; // Set volume
+    audio.play();
+    if (isSustaining) {
+        sustainedNotes.add(audio);
+    } else {
+        audio.addEventListener('ended', () => {
+            sustainedNotes.delete(audio);
+        });
+    }
+};
 
+const stopNote = (audio) => {
+    audio.pause();
+    audio.currentTime = 0;
+    sustainedNotes.delete(audio);
+};
+
+keys.forEach(key => {
     key.addEventListener('mousedown', () => {
-        playNote(key.dataset.note);
+        const note = key.dataset.note;
+        playNote(note);
     });
-
-    key.addEventListener('mouseup', stopNote);
-    key.addEventListener('mouseleave', stopNote);
-
-    function playNote(note) {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        oscillator.frequency.setValueAtTime(getFrequency(note), audioContext.currentTime);
-        oscillator.start();
-        key.oscillator = oscillator;
-        key.gainNode = gainNode;
-    }
-
-    function stopNote() {
-        if (oscillator) {
-            key.gainNode.gain.exponentialRampToValueAtTime(0.00001, key.oscillator.context.currentTime + 0.03);
-            oscillator.stop(key.oscillator.context.currentTime + 0.03);
+    key.addEventListener('mouseup', () => {
+        if (!isSustaining) {
+            // For non-sustain mode, stop the note
+            // (In this case, stopping the note is handled by the audio end event)
         }
-    }
+    });
 });
 
-function updateKeys() {
-    document.querySelectorAll('.white-key, .black-key').forEach(key => {
-        let note = key.dataset.note;
-        key.dataset.note = note.slice(0, -1) + currentOctave;
-    });
-}
+sustainButton.addEventListener('mousedown', () => {
+    isSustaining = true;
+});
 
-function getFrequency(note) {
-    const A4 = 440;
-    const semitoneRatio = Math.pow(2, 1/12);
-    const notes = {'C': -9, 'C#': -8, 'D': -7, 'D#': -6, 'E': -5, 'F': -4, 'F#': -3, 'G': -2, 'G#': -1, 'A': 0, 'A#': 1, 'B': 2};
-    const [letter, octave] = [note.slice(0, -1), note.slice(-1)];
-    const noteNumber = notes[letter] + (octave - 4) * 12;
-    return A4 * Math.pow(semitoneRatio, noteNumber);
-}
+sustainButton.addEventListener('mouseup', () => {
+    isSustaining = false;
+    // Stop all sustained notes
+    sustainedNotes.forEach(audio => {
+        stopNote(audio);
+    });
+});
+
+// Volume control
+volumeControl.addEventListener('input', (event) => {
+    volume = event.target.value;
+    sustainedNotes.forEach(audio => {
+        audio.volume = volume;
+    });
+});
