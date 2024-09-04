@@ -1,18 +1,18 @@
 // script.js
 const notes = {
-    'C4': 'path_to_C4.mp3',
-    'C#4': 'path_to_Csharp4.mp3',
-    'D4': 'path_to_D4.mp3',
-    'D#4': 'path_to_Dsharp4.mp3',
-    'E4': 'path_to_E4.mp3',
-    'F4': 'path_to_F4.mp3',
-    'F#4': 'path_to_Fsharp4.mp3',
-    'G4': 'path_to_G4.mp3',
-    'G#4': 'path_to_Gsharp4.mp3',
-    'A4': 'path_to_A4.mp3',
-    'A#4': 'path_to_Asharp4.mp3',
-    'B4': 'path_to_B4.mp3',
-    'C5': 'path_to_C5.mp3',
+    'C4': 'audio/C4.mp3',
+    'C#4': 'audio/Csharp4.mp3',
+    'D4': 'audio/D4.mp3',
+    'D#4': 'audio/Dsharp4.mp3',
+    'E4': 'audio/E4.mp3',
+    'F4': 'audio/F4.mp3',
+    'F#4': 'audio/Fsharp4.mp3',
+    'G4': 'audio/G4.mp3',
+    'G#4': 'audio/Gsharp4.mp3',
+    'A4': 'audio/A4.mp3',
+    'A#4': 'audio/Asharp4.mp3',
+    'B4': 'audio/B4.mp3',
+    'C5': 'audio/C5.mp3',
 };
 
 const keys = document.querySelectorAll('.key');
