@@ -129,9 +129,26 @@ document.getElementById('volume').addEventListener('input', (event) => {
         gainNode.gain.value = event.target.value;
     }
 });
-// Metronome button logic
-document.getElementById('metronome-toggle').addEventListener('click', () => {
-    playMetronome();
+
+const metronomeInterval = 60000 / 120; // Default to 120 BPM
+let metronomeTimer;
+let isMetronomeRunning = false;
+
+const startStopMetronome = () => {
+    if (isMetronomeRunning) {
+        clearInterval(metronomeTimer);
+        isMetronomeRunning = false;
+        document.getElementById('metronome-toggle').textContent = 'Start Metronome';
+    } else {
+        const bpm = parseInt(document.getElementById('bpm').value, 10) || 120;
+        const interval = 60000 / bpm;
+        metronomeTimer = setInterval(playMetronomeSound, interval);
+        isMetronomeRunning = true;
+        document.getElementById('metronome-toggle').textContent = 'Stop Metronome';
+    }
+};
+
+document.getElementById('metronome-toggle').addEventListener('click', startStopMetronome);
 });
 
 document.addEventListener('keydown', handleKeyDown);
