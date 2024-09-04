@@ -12,10 +12,20 @@ const notes = {
     'A#4': 'audio/Asharp4.mp3',
     'B4': 'audio/B4.mp3',
     'C5': 'audio/C5.mp3',
-    'metronome': 'audio/metronome.mp3'  // New metronome sound
+    'A3': 'audio/A3.mp3',
+    'A#3': 'audio/Asharp3.mp3',
+    'B3': 'audio/B3.mp3',
+    'C#5': 'audio/Csharp5.mp3',
+    'D5': 'audio/D5.mp3',
+    'D#5': 'audio/Dsharp5.mp3',
+    'E5': 'audio/E5.mp3',
+    'metronome': 'audio/metronome.mp3',
 };
 
 const keyMappings = {
+    'KeyQ': 'A3',
+    'Digit2': 'A#3',
+    'KeyW': 'B3',
     'KeyA': 'C4',
     'KeyW': 'C#4',
     'KeyS': 'D4',
@@ -29,23 +39,23 @@ const keyMappings = {
     'KeyU': 'A#4',
     'KeyJ': 'B4',
     'KeyK': 'C5',
+    'KeyL': 'C#5',
+    'KeyO': 'D5',
+    'KeyP': 'D#5',
+    'KeyN': 'E5',
 };
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
-const gainNode = audioContext.createGain();
-gainNode.connect(audioContext.destination);
 
-// Preload and decode audio files
 const preloadAudio = async () => {
     const fetchPromises = Object.keys(notes).map(async note => {
-        try {
-            const response = await fetch(notes[note]);
-            if (!response.ok) throw new Error(`Failed to load ${notes[note]}`);
+        const response = await fetch(notes[note]);
+        if (response.ok) {
             const arrayBuffer = await response.arrayBuffer();
             audioBuffers[note] = await audioContext.decodeAudioData(arrayBuffer);
-        } catch (error) {
-            console.error(error);
+        } else {
+            console.error(`Failed to load ${notes[note]}`);
         }
     });
     await Promise.all(fetchPromises);
@@ -56,21 +66,12 @@ const playNote = (note) => {
     if (audioBuffers[note]) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[note];
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = document.getElementById('volume').value; // Set volume based on slider
         source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
         source.start(0);
         highlightKey(note);
-    }
-};
-
-const playMetronomeSound = () => {
-    const metronomeNote = 'metronome'; // Use the key for the new metronome sound
-    if (audioBuffers[metronomeNote]) {
-        const source = audioContext.createBufferSource();
-        source.buffer = audioBuffers[metronomeNote];
-        source.connect(gainNode);  // Ensure the metronome sound also goes through the gain node
-        source.start(0);
-    } else {
-        console.error(`No audio buffer for metronome note: ${metronomeNote}`);
     }
 };
 
@@ -96,27 +97,51 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-document.getElementById('volume').addEventListener('input', (event) => {
-    const volume = parseFloat(event.target.value);
-    gainNode.gain.value = volume;
+document.addEventListener('keyup', (event) => {
+    const note = keyMappings[event.code];
+    if (note) {
+        document.querySelectorAll('.key').forEach(key => {
+            if (key.dataset.note === note) {
+                key.classList.remove('active');
+            }
+        });
+    }
 });
 
-const metronomeInterval = 60000 / 120; // Default to 120 BPM
-let metronomeTimer;
-let isMetronomeRunning = false;
+let metronomeInterval;
+const metronomeButton = document.getElementById('metronome-toggle');
+const bpmInput = document.getElementById('bpm');
 
-const startStopMetronome = () => {
-    if (isMetronomeRunning) {
-        clearInterval(metronomeTimer);
-        isMetronomeRunning = false;
-        document.getElementById('metronome-toggle').textContent = 'Start Metronome';
-    } else {
-        const bpm = parseInt(document.getElementById('bpm').value, 10) || 120;
-        const interval = 60000 / bpm;
-        metronomeTimer = setInterval(playMetronomeSound, interval);
-        isMetronomeRunning = true;
-        document.getElementById('metronome-toggle').textContent = 'Stop Metronome';
-    }
+const startMetronome = () => {
+    const bpm = parseInt(bpmInput.value, 10);
+    const interval = 60000 / bpm; // Calculate interval in milliseconds
+    metronomeInterval = setInterval(() => {
+        playMetronomeSound();
+    }, interval);
+    metronomeButton.textContent = 'Stop';
 };
 
-document.getElementById('metronome-toggle').addEventListener('click', startStopMetronome);
+const stopMetronome = () => {
+    clearInterval(metronomeInterval);
+    metronomeButton.textContent = 'Start';
+};
+
+metronomeButton.addEventListener('click', () => {
+    if (metronomeButton.textContent === 'Start') {
+        startMetronome();
+    } else {
+        stopMetronome();
+    }
+});
+
+const playMetronomeSound = () => {
+    if (audioBuffers['C4']) { // Use a note sound for metronome tick
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffers['C4']; // You can replace this with a specific metronome sound
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = document.getElementById('volume').value; // Set volume based on slider
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        source.start(0);
+    }
+};
