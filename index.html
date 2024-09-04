@@ -8,16 +8,33 @@
 </head>
 <body>
     <div class="container">
-        <div class="piano">
-            <button class="key white" data-note="C3"></button>
-            <button class="key black" data-note="C#3"></button>
-            <button class="key white" data-note="D3"></button>
-            <!-- Add more keys here -->
-        </div>
         <div class="controls">
+            <button id="octave-down">Octave Down</button>
+            <button id="octave-up">Octave Up</button>
             <button id="sustain-button">Sustain</button>
             <label for="volume-control">Volume:</label>
             <input type="range" id="volume-control" min="0" max="1" step="0.01" value="0.5">
+            <div>
+                <label>
+                    <input type="checkbox" id="single-sustain" checked>
+                    Sustain one note at a time
+                </label>
+            </div>
+        </div>
+        <div class="piano">
+            <button class="key white" data-note="C4"></button>
+            <button class="key black" data-note="C#4"></button>
+            <button class="key white" data-note="D4"></button>
+            <button class="key black" data-note="D#4"></button>
+            <button class="key white" data-note="E4"></button>
+            <button class="key white" data-note="F4"></button>
+            <button class="key black" data-note="F#4"></button>
+            <button class="key white" data-note="G4"></button>
+            <button class="key black" data-note="G#4"></button>
+            <button class="key white" data-note="A4"></button>
+            <button class="key black" data-note="A#4"></button>
+            <button class="key white" data-note="B4"></button>
+            <button class="key white" data-note="C5"></button>
         </div>
     </div>
     <script src="script.js"></script>
