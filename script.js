@@ -20,7 +20,7 @@ const notes = {
     'D#5': 'audio/Dsharp5.mp3',
     'E5': 'audio/E5.mp3',
     'F5': 'audio/F5.mp3',
-    'metronome': 'metronome.mp3',
+    'metronome': 'audio/metronome.mp3',
 };
 
 const keyMappings = {
@@ -88,9 +88,6 @@ const playMetronome = () => {
         source.buffer = audioBuffers['metronome'];
         source.connect(gainNode);
         source.start(0);
-        console.log('Metronome played');
-    } else {
-        console.error('Metronome audio buffer is not loaded');
     }
 };
 
