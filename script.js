@@ -88,6 +88,9 @@ const playMetronome = () => {
         source.buffer = audioBuffers['metronome'];
         source.connect(gainNode);
         source.start(0);
+        console.log('Metronome played');
+    } else {
+        console.error('Metronome audio buffer is not loaded');
     }
 };
 
