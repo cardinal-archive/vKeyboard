@@ -10,12 +10,15 @@ body {
 .piano-container {
     overflow-x: auto;
     white-space: nowrap;
+    padding: 0 10px; /* Add padding to prevent keys from being cut off */
     margin-top: 20px;
+    min-width: 100%; /* Ensure the container takes full width */
 }
 
 .piano {
     display: inline-flex;
     position: relative;
+    min-width: 1000px; /* Set a minimum width to fit all keys */
 }
 
 .key {
@@ -24,6 +27,7 @@ body {
     border: 1px solid black;
     position: relative;
     display: inline-block;
+    box-sizing: border-box; /* Ensure padding and borders are included in the element’s width and height */
 }
 
 .key.white {
@@ -88,5 +92,10 @@ body {
 }
 
 input[type="range"] {
+    margin-left: 10px;
+}
+
+input[type="number"] {
+    width: 60px; /* Set a fixed width for the BPM input */
     margin-left: 10px;
 }
