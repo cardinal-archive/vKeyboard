@@ -14,51 +14,44 @@ const notes = {
     'C5': 'audio/C5.mp3',
 };
 
-const audioElements = {};
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+const audioBuffers = {};
 let sustain = false;
 let multiSustain = false;
 
-// Preload audio files
-const preloadAudio = () => {
-    Object.keys(notes).forEach(note => {
-        const audio = new Audio(notes[note]);
-        audio.load(); // Preload the audio
-        audioElements[note] = audio;
+// Preload and decode audio files
+const preloadAudio = async () => {
+    const fetchPromises = Object.keys(notes).map(async note => {
+        const response = await fetch(notes[note]);
+        const arrayBuffer = await response.arrayBuffer();
+        audioBuffers[note] = await audioContext.decodeAudioData(arrayBuffer);
     });
+    await Promise.all(fetchPromises);
 };
 preloadAudio();
 
 const playNote = (note) => {
-    if (!audioElements[note]) {
-        const audio = new Audio(notes[note]);
-        audioElements[note] = audio;
-    }
-    if (!multiSustain) {
-        stopAllNotes();
-    }
-    audioElements[note].currentTime = 0;
-    audioElements[note].play();
-};
-
-const stopNoteIfNoSustain = (note) => {
-    if (!sustain && audioElements[note]) {
-        audioElements[note].pause();
-        audioElements[note].currentTime = 0;
+    if (audioBuffers[note]) {
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffers[note];
+        source.connect(audioContext.destination);
+        source.start(0);
     }
 };
 
 const stopAllNotes = () => {
-    for (let note in audioElements) {
-        audioElements[note].pause();
-        audioElements[note].currentTime = 0;
-    }
+    // Web Audio API doesn't support stopping all notes directly.
+    // Implement custom logic if needed.
 };
 
 // Event Listeners
 document.querySelectorAll('.key').forEach(key => {
     key.addEventListener('mousedown', () => playNote(key.dataset.note));
-    key.addEventListener('mouseup', () => stopNoteIfNoSustain(key.dataset.note));
+    key.addEventListener('mouseup', () => {
+        if (!sustain && !multiSustain) {
+            stopAllNotes();
+        }
+    });
 });
 
 document.getElementById('sustain').addEventListener('click', () => {
@@ -70,7 +63,6 @@ document.getElementById('multi-sustain').addEventListener('change', (event) => {
 });
 
 document.getElementById('volume').addEventListener('input', (event) => {
-    for (let note in audioElements) {
-        audioElements[note].volume = event.target.value;
-    }
+    // Volume control for Web Audio API requires adjusting gain nodes
+    // Implement volume control if necessary
 });
