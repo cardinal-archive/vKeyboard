@@ -1,50 +1,54 @@
+/* style.css */
 body {
-    margin: 0;
+    font-family: Arial, sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #282c34;
+    margin: 0;
+    background-color: #f0f0f0;
 }
 
-.piano-container {
+.container {
     text-align: center;
-    color: white;
-}
-
-.octave-controls button {
-    padding: 10px 20px;
-    margin: 5px;
-    cursor: pointer;
-    background-color: #61dafb;
-    border: none;
-    border-radius: 5px;
 }
 
 .piano {
     display: flex;
-    position: relative;
-    width: 560px;
+    justify-content: center;
+}
+
+.key {
+    width: 50px;
     height: 200px;
-}
-
-.white-key {
-    width: 60px;
-    height: 100%;
-    background: white;
+    margin: 1px;
     border: 1px solid black;
-    box-sizing: border-box;
+    position: relative;
 }
 
-.black-key {
-    width: 40px;
-    height: 60%;
+.white {
+    background: white;
+}
+
+.black {
+    width: 30px;
+    height: 120px;
     background: black;
     position: absolute;
+    left: 35px;
+    z-index: 1;
 }
 
-.black-key:nth-child(2) { left: 45px; }
-.black-key:nth-child(4) { left: 105px; }
-.black-key:nth-child(7) { left: 225px; }
-.black-key:nth-child(9) { left: 285px; }
-.black-key:nth-child(11) { left: 345px; }
+.controls {
+    margin-top: 20px;
+}
+
+#sustain-button {
+    padding: 10px 20px;
+    font-size: 16px;
+}
+
+#volume-control {
+    margin-left: 10px;
+    width: 200px;
+}
