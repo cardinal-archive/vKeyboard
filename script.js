@@ -32,8 +32,10 @@ const keyMappings = {
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
-const pressedKeys = new Set();
-let debounceTimeout;
+const gainNode = audioContext.createGain(); // Create a GainNode
+
+// Connect GainNode to the audio context's destination
+gainNode.connect(audioContext.destination);
 
 // Preload and decode audio files
 const preloadAudio = async () => {
@@ -50,7 +52,7 @@ const playNote = (note) => {
     if (audioBuffers[note]) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[note];
-        source.connect(audioContext.destination);
+        source.connect(gainNode); // Connect source to GainNode
         source.start(0);
         highlightKey(note);
     }
@@ -66,53 +68,19 @@ const highlightKey = (note) => {
     });
 };
 
-const debounce = (func, delay) => {
-    return (...args) => {
-        clearTimeout(debounceTimeout);
-        debounceTimeout = setTimeout(() => func(...args), delay);
-    };
-};
-
-const handleKeydown = debounce((event) => {
-    if (document.activeElement.tagName === 'INPUT') return; // Ignore if an input field is focused
-
-    const note = keyMappings[event.code];
-    if (note && !pressedKeys.has(note)) {
-        playNote(note);
-        pressedKeys.add(note);
-    }
-}, 100);
-
-const handleKeyup = (event) => {
-    const note = keyMappings[event.code];
-    if (note) {
-        document.querySelectorAll('.key').forEach(key => {
-            if (key.dataset.note === note) {
-                key.classList.remove('active');
-            }
-        });
-        pressedKeys.delete(note);
-    }
-};
-
 document.querySelectorAll('.key').forEach(key => {
-    key.addEventListener('mousedown', () => {
-        playNote(key.dataset.note);
-        pressedKeys.add(key.dataset.note);
-    });
-    key.addEventListener('mouseup', () => {
-        key.classList.remove('active');
-        pressedKeys.delete(key.dataset.note);
-    });
+    key.addEventListener('mousedown', () => playNote(key.dataset.note));
+    key.addEventListener('mouseup', () => key.classList.remove('active'));
 });
 
-document.addEventListener('keydown', handleKeydown);
-document.addEventListener('keyup', handleKeyup);
+document.addEventListener('keydown', (event) => {
+    const note = keyMappings[event.code];
+    if (note) {
+        playNote(note);
+    }
+});
 
 document.getElementById('volume').addEventListener('input', (event) => {
-    const volume = event.target.value;
-    // Adjust volume using GainNode
-    const gainNode = audioContext.createGain();
-    gainNode.gain.value = volume;
-    audioContext.destination.connect(gainNode);
+    const volume = parseFloat(event.target.value);
+    gainNode.gain.value = volume; // Adjust GainNode's gain based on the slider value
 });
