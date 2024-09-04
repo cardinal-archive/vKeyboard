@@ -67,6 +67,7 @@ const playNote = (note) => {
         source.buffer = audioBuffers[note];
         source.connect(gainNode);
         source.start(0);
+        highlightKey(note); // Highlight the key when the note is played
     }
 };
 
@@ -75,16 +76,18 @@ document.getElementById('volume').addEventListener('input', (event) => {
     gainNode.gain.value = volume;
 });
 
-const activeKeys = new Set();
-
 const highlightKey = (note) => {
-    document.querySelectorAll('.key').forEach(key => {
-        if (key.dataset.note === note) {
-            key.classList.add('active');
-        } else if (!activeKeys.has(note)) {
-            key.classList.remove('active');
-        }
-    });
+    const keyElement = document.querySelector(`.key[data-note="${note}"]`);
+    if (keyElement) {
+        keyElement.classList.add('active');
+    }
+};
+
+const removeHighlight = (note) => {
+    const keyElement = document.querySelector(`.key[data-note="${note}"]`);
+    if (keyElement) {
+        keyElement.classList.remove('active');
+    }
 };
 
 document.querySelectorAll('.key').forEach(key => {
@@ -92,36 +95,32 @@ document.querySelectorAll('.key').forEach(key => {
         const note = key.dataset.note;
         if (note) {
             playNote(note);
-            highlightKey(note);
-            activeKeys.add(note);
         }
     });
     key.addEventListener('mouseup', () => {
         const note = key.dataset.note;
         if (note) {
-            key.classList.remove('active');
-            activeKeys.delete(note);
+            removeHighlight(note);
+        }
+    });
+    key.addEventListener('mouseleave', () => {
+        const note = key.dataset.note;
+        if (note) {
+            removeHighlight(note);
         }
     });
 });
 
 document.addEventListener('keydown', (event) => {
     const note = keyMappings[event.code];
-    if (note && !activeKeys.has(event.code)) {
-        activeKeys.add(event.code);
+    if (note) {
         playNote(note);
-        highlightKey(note);
     }
 });
 
 document.addEventListener('keyup', (event) => {
     const note = keyMappings[event.code];
     if (note) {
-        activeKeys.delete(event.code);
-        document.querySelectorAll('.key').forEach(key => {
-            if (key.dataset.note === note) {
-                key.classList.remove('active');
-            }
-        });
+        removeHighlight(note);
     }
 });
