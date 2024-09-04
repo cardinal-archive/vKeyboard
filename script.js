@@ -82,12 +82,15 @@ const highlightKeys = () => {
     });
 };
 //metronome
-const playMetronome = () => {
-    if (audioBuffers['metronome']) {
+const playMetronomeSound = () => {
+    const metronomeNote = 'metronome'; // Use the key for the new metronome sound
+    if (audioBuffers[metronomeNote]) {
         const source = audioContext.createBufferSource();
-        source.buffer = audioBuffers['metronome'];
-        source.connect(gainNode);
+        source.buffer = audioBuffers[metronomeNote];
+        source.connect(gainNode);  // Ensure the metronome sound also goes through the gain node
         source.start(0);
+    } else {
+        console.error(`No audio buffer for metronome note: ${metronomeNote}`);
     }
 };
 
