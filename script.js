@@ -1,96 +1,139 @@
-const keyMappings = {
-    'KeyA': 'C4',
-    'KeyW': 'C#4',
-    'KeyS': 'D4',
-    'KeyE': 'D#4',
-    'KeyD': 'E4',
-    'KeyF': 'F4',
-    'KeyT': 'F#4',
-    'KeyG': 'G4',
-    'KeyY': 'G#4',
-    'KeyH': 'A4',
-    'KeyU': 'A#4',
-    'KeyJ': 'B4',
-    'KeyK': 'C5',
-};
-
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-const audioBuffers = {};
-const activeNodes = new Map(); // Map to keep track of active notes and their nodes
-const keyTimers = {}; // Track active timers for each key to prevent rapid firing
-
-const preloadAudio = async () => {
-    const fetchPromises = Object.keys(notes).map(async note => {
-        const response = await fetch(notes[note]);
-        const arrayBuffer = await response.arrayBuffer();
-        audioBuffers[note] = await audioContext.decodeAudioData(arrayBuffer);
-    });
-    await Promise.all(fetchPromises);
-};
-preloadAudio();
-
-const playNote = (note) => {
-    if (audioBuffers[note]) {
-        const source = audioContext.createBufferSource();
-        source.buffer = audioBuffers[note];
-        source.connect(audioContext.destination);
-        source.start(0);
-        
-        activeNodes.set(note, source);
-        highlightKey(note);
-
-        // Clear any existing timer for this note
-        if (keyTimers[note]) {
-            clearInterval(keyTimers[note]);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Piano</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #2c2c2c;
+            color: white;
+            font-family: Arial, sans-serif;
         }
-    }
-};
-
-const stopNote = (note) => {
-    const source = activeNodes.get(note);
-    if (source) {
-        source.stop(); // Stop the source node
-        activeNodes.delete(note); // Remove from active nodes
-        highlightKey(note, false);
-    }
-};
-
-const highlightKey = (note, highlight = true) => {
-    document.querySelectorAll('.key').forEach(key => {
-        if (key.dataset.note === note) {
-            key.classList.toggle('active', highlight);
+        .piano {
+            display: flex;
+            margin-top: 20px;
+            position: relative;
         }
-    });
-};
-
-const handleKeyDown = (event) => {
-    const note = keyMappings[event.code];
-    if (note) {
-        if (!keyTimers[note]) {
-            playNote(note);
-            keyTimers[note] = setInterval(() => {
-                playNote(note); // Ensure the note plays again after the interval
-            }, 200); // Adjust interval as needed
+        .key {
+            width: 60px;
+            height: 200px;
+            border: 1px solid black;
+            background-color: white;
+            position: relative;
+            z-index: 1;
         }
-    }
-};
-
-const handleKeyUp = (event) => {
-    const note = keyMappings[event.code];
-    if (note) {
-        if (keyTimers[note]) {
-            clearInterval(keyTimers[note]); // Stop rapid firing
-            delete keyTimers[note];
+        .key.black {
+            width: 40px;
+            height: 120px;
+            background-color: black;
+            position: absolute;
+            top: 0;
+            z-index: 2;
         }
-        stopNote(note);
-    }
-};
+        .key.highlighted {
+            background-color: #ddd;
+        }
+        .key.black.highlighted {
+            background-color: #555;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        .volume-control {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Virtual Piano</h1>
 
-document.querySelectorAll('.key').forEach(key => {
-    key.addEventListener('mousedown', () => playNote(key.dataset.note));
-    key.addEventListener('mouseup', () => stopNote(key.dataset.note));
-    key.addEventListener('mouseleave', () => stopNote(key.dataset.note)); // Optional: stop note if mouse leaves key
-});
+    <div class="piano">
+        <div class="key white" data-note="C4" data-key="KeyA">A</div>
+        <div class="key black" data-note="C#4" data-key="KeyW" style="left: 40px;">W</div>
+        <div class="key white" data-note="D4" data-key="KeyS">S</div>
+        <div class="key black" data-note="D#4" data-key="KeyE" style="left: 100px;">E</div>
+        <div class="key white" data-note="E4" data-key="KeyD">D</div>
+        <div class="key white" data-note="F4" data-key="KeyF">F</div>
+        <div class="key black" data-note="F#4" data-key="KeyT" style="left: 220px;">T</div>
+        <div class="key white" data-note="G4" data-key="KeyG">G</div>
+        <div class="key black" data-note="G#4" data-key="KeyY" style="left: 280px;">Y</div>
+        <div class="key white" data-note="A4" data-key="KeyH">H</div>
+        <div class="key black" data-note="A#4" data-key="KeyU" style="left: 340px;">U</div>
+        <div class="key white" data-note="B4" data-key="KeyJ">J</div>
+        <div class="key white" data-note="C5" data-key="KeyK">K</div>
+    </div>
 
-document.addEventListener('keydown', handleKeyDown);
-document.addEventListener('keyup', handleKeyUp);
+    <div class="controls">
+        <button id="octave-down">Octave Down</button>
+        <button id="octave-up">Octave Up</button>
+        <div class="volume-control">
+            <label for="volume">Volume:</label>
+            <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5">
+        </div>
+    </div>
+
+    <script>
+        const notes = {
+            'C4': 'audio/C4.mp3',
+            'C#4': 'audio/Csharp4.mp3',
+            'D4': 'audio/D4.mp3',
+            'D#4': 'audio/Dsharp4.mp3',
+            'E4': 'audio/E4.mp3',
+            'F4': 'audio/F4.mp3',
+            'F#4': 'audio/Fsharp4.mp3',
+            'G4': 'audio/G4.mp3',
+            'G#4': 'audio/Gsharp4.mp3',
+            'A4': 'audio/A4.mp3',
+            'A#4': 'audio/Asharp4.mp3',
+            'B4': 'audio/B4.mp3',
+            'C5': 'audio/C5.mp3',
+        };
+
+        const keyElements = document.querySelectorAll('.key');
+        const keyMappings = Array.from(keyElements).reduce((acc, key) => {
+            acc[key.dataset.key] = key;
+            return acc;
+        }, {});
+
+        let activeNotes = {};
+
+        const playNote = (note) => {
+            if (!activeNotes[note]) {
+                activeNotes[note] = new Audio(notes[note]);
+                activeNotes[note].play();
+            }
+        };
+
+        const stopNote = (note) => {
+            if (activeNotes[note]) {
+                activeNotes[note].pause();
+                activeNotes[note].currentTime = 0;
+                delete activeNotes[note];
+            }
+        };
+
+        const handleKeyDown = (event) => {
+            const keyElement = keyMappings[event.code];
+            if (keyElement && !keyElement.classList.contains('highlighted')) {
+                keyElement.classList.add('highlighted');
+                playNote(keyElement.dataset.note);
+            }
+        };
+
+        const handleKeyUp = (event) => {
+            const keyElement = keyMappings[event.code];
+            if (keyElement && keyElement.classList.contains('highlighted')) {
+                keyElement.classList.remove('highlighted');
+                stopNote(keyElement.dataset.note);
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('keyup', handleKeyUp);
+    </script>
+</body>
+</html>
