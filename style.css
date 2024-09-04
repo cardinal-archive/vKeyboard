@@ -1,0 +1,50 @@
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #282c34;
+}
+
+.piano-container {
+    text-align: center;
+    color: white;
+}
+
+.octave-controls button {
+    padding: 10px 20px;
+    margin: 5px;
+    cursor: pointer;
+    background-color: #61dafb;
+    border: none;
+    border-radius: 5px;
+}
+
+.piano {
+    display: flex;
+    position: relative;
+    width: 560px;
+    height: 200px;
+}
+
+.white-key {
+    width: 60px;
+    height: 100%;
+    background: white;
+    border: 1px solid black;
+    box-sizing: border-box;
+}
+
+.black-key {
+    width: 40px;
+    height: 60%;
+    background: black;
+    position: absolute;
+}
+
+.black-key:nth-child(2) { left: 45px; }
+.black-key:nth-child(4) { left: 105px; }
+.black-key:nth-child(7) { left: 225px; }
+.black-key:nth-child(9) { left: 285px; }
+.black-key:nth-child(11) { left: 345px; }
