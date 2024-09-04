@@ -14,6 +14,22 @@ const notes = {
     'C5': 'audio/C5.mp3',
 };
 
+const keyMappings = {
+    'KeyA': 'C4',
+    'KeyW': 'C#4',
+    'KeyS': 'D4',
+    'KeyE': 'D#4',
+    'KeyD': 'E4',
+    'KeyF': 'F4',
+    'KeyT': 'F#4',
+    'KeyG': 'G4',
+    'KeyY': 'G#4',
+    'KeyH': 'A4',
+    'KeyU': 'A#4',
+    'KeyJ': 'B4',
+    'KeyK': 'C5',
+};
+
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
 let sustain = false;
@@ -44,7 +60,7 @@ const stopAllNotes = () => {
     // Implement custom logic if needed.
 };
 
-// Event Listeners
+// Event Listeners for Mouse
 document.querySelectorAll('.key').forEach(key => {
     key.addEventListener('mousedown', () => playNote(key.dataset.note));
     key.addEventListener('mouseup', () => {
@@ -54,6 +70,24 @@ document.querySelectorAll('.key').forEach(key => {
     });
 });
 
+// Event Listeners for Keyboard
+document.addEventListener('keydown', (event) => {
+    const note = keyMappings[event.code];
+    if (note) {
+        playNote(note);
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    const note = keyMappings[event.code];
+    if (note && !sustain && !multiSustain) {
+        // Implement logic to stop the note
+        // Since Web Audio API doesn’t support stopping notes directly,
+        // consider implementing a way to track and stop playing notes if necessary.
+    }
+});
+
+// Sustain and Multi-sustain controls
 document.getElementById('sustain').addEventListener('click', () => {
     sustain = !sustain;
 });
