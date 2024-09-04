@@ -24,8 +24,6 @@ const notes = {
 };
 
 const keyMappings = {
-//    'KeyA': 'A3',
-//    'KeyW': 'A#3',
     'KeyA': 'B3',
     'KeyS': 'C4',
     'KeyE': 'C#4',
@@ -78,6 +76,7 @@ document.getElementById('volume').addEventListener('input', (event) => {
     gainNode.gain.value = volume;
 });
 
+const activeKeys = new Set();
 
 const highlightKey = (note) => {
     document.querySelectorAll('.key').forEach(key => {
@@ -90,13 +89,26 @@ const highlightKey = (note) => {
 };
 
 document.querySelectorAll('.key').forEach(key => {
-    key.addEventListener('mousedown', () => playNote(key.dataset.note));
-    key.addEventListener('mouseup', () => key.classList.remove('active'));
+    key.addEventListener('mousedown', () => {
+        const note = key.dataset.note;
+        if (note) {
+            playNote(note);
+            activeKeys.add(note); // Add to activeKeys set for mouse
+        }
+    });
+    key.addEventListener('mouseup', () => {
+        const note = key.dataset.note;
+        if (note) {
+            activeKeys.delete(note); // Remove from activeKeys set for mouse
+            key.classList.remove('active');
+        }
+    });
 });
 
 document.addEventListener('keydown', (event) => {
     const note = keyMappings[event.code];
-    if (note) {
+    if (note && !activeKeys.has(event.code)) {
+        activeKeys.add(event.code); // Add the key to the activeKeys set
         playNote(note);
     }
 });
@@ -104,17 +116,13 @@ document.addEventListener('keydown', (event) => {
 document.addEventListener('keyup', (event) => {
     const note = keyMappings[event.code];
     if (note) {
+        activeKeys.delete(event.code); // Remove the key from the activeKeys set
         document.querySelectorAll('.key').forEach(key => {
             if (key.dataset.note === note) {
                 key.classList.remove('active');
             }
         });
     }
-});
-
-document.getElementById('volume').addEventListener('input', (event) => {
-    const volume = event.target.value;
-    audioContext.destination.gain.value = volume;
 });
 
 // Metronome related code
