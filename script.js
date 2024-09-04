@@ -12,6 +12,7 @@ const notes = {
     'A#4': 'audio/Asharp4.mp3',
     'B4': 'audio/B4.mp3',
     'C5': 'audio/C5.mp3',
+    'metronome': 'audio/metronome.mp3',
 };
 
 const keyMappings = {
@@ -99,7 +100,7 @@ const toggleMetronome = () => {
         const interval = 60000 / bpm;
         metronomeInterval = setInterval(() => {
             console.log('Metronome tick');
-            playNote('C4');  // Ensure this note is correctly loaded
+            playNote('metronome');  // Ensure this note is correctly loaded
         }, interval);
         metronomeButton.textContent = 'Stop';
         console.log('Metronome started with interval:', interval);
