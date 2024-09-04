@@ -11,13 +11,13 @@ body {
 h2 {
     font-size: 12px; /* Font size */
     font-weight: bold; /* Font weight */
-    color: #FFFFFF; /* Text color */
+    color: #C41E3A; /* Text color */
     margin: 2px 0; /* Margin around the heading */
     padding: 2px; /* Padding inside the heading */
     text-align: center; /* Center alignment */
     font-family: 'Arial', sans-serif; /* Font family */
-    background-color: #C41E3A; /* Background color */
-    border: 1px solid #000000; /* Border around the heading */
+    background-color: #f0f0f0; /* Background color */
+    border: 1px solid #ddd; /* Border around the heading */
     border-radius: 2px; /* Rounded corners */
 }
 
