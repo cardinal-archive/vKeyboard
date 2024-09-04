@@ -1,19 +1,3 @@
-const notes = {
-    'C4': 'audio/C4.mp3',
-    'C#4': 'audio/Csharp4.mp3',
-    'D4': 'audio/D4.mp3',
-    'D#4': 'audio/Dsharp4.mp3',
-    'E4': 'audio/E4.mp3',
-    'F4': 'audio/F4.mp3',
-    'F#4': 'audio/Fsharp4.mp3',
-    'G4': 'audio/G4.mp3',
-    'G#4': 'audio/Gsharp4.mp3',
-    'A4': 'audio/A4.mp3',
-    'A#4': 'audio/Asharp4.mp3',
-    'B4': 'audio/B4.mp3',
-    'C5': 'audio/C5.mp3',
-};
-
 const keyMappings = {
     'KeyA': 'C4',
     'KeyW': 'C#4',
@@ -32,10 +16,7 @@ const keyMappings = {
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
-let sustain = false;
-let multiSustain = false;
 
-// Preload and decode audio files
 const preloadAudio = async () => {
     const fetchPromises = Object.keys(notes).map(async note => {
         const response = await fetch(notes[note]);
@@ -52,51 +33,28 @@ const playNote = (note) => {
         source.buffer = audioBuffers[note];
         source.connect(audioContext.destination);
         source.start(0);
+        highlightKey(note);
     }
 };
 
-const stopAllNotes = () => {
-    // Web Audio API doesn't support stopping all notes directly.
-    // Implement custom logic if needed.
-};
-
-// Event Listeners for Mouse
-document.querySelectorAll('.key').forEach(key => {
-    key.addEventListener('mousedown', () => playNote(key.dataset.note));
-    key.addEventListener('mouseup', () => {
-        if (!sustain && !multiSustain) {
-            stopAllNotes();
+const highlightKey = (note) => {
+    document.querySelectorAll('.key').forEach(key => {
+        if (key.dataset.note === note) {
+            key.classList.add('active');
+        } else {
+            key.classList.remove('active');
         }
     });
+};
+
+document.querySelectorAll('.key').forEach(key => {
+    key.addEventListener('mousedown', () => playNote(key.dataset.note));
+    key.addEventListener('mouseup', () => key.classList.remove('active'));
 });
 
-// Event Listeners for Keyboard
 document.addEventListener('keydown', (event) => {
     const note = keyMappings[event.code];
     if (note) {
         playNote(note);
     }
-});
-
-document.addEventListener('keyup', (event) => {
-    const note = keyMappings[event.code];
-    if (note && !sustain && !multiSustain) {
-        // Implement logic to stop the note
-        // Since Web Audio API doesn’t support stopping notes directly,
-        // consider implementing a way to track and stop playing notes if necessary.
-    }
-});
-
-// Sustain and Multi-sustain controls
-document.getElementById('sustain').addEventListener('click', () => {
-    sustain = !sustain;
-});
-
-document.getElementById('multi-sustain').addEventListener('change', (event) => {
-    multiSustain = event.target.checked;
-});
-
-document.getElementById('volume').addEventListener('input', (event) => {
-    // Volume control for Web Audio API requires adjusting gain nodes
-    // Implement volume control if necessary
 });
