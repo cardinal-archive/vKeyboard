@@ -75,11 +75,10 @@ body {
 
 .metronome-control {
     display: flex;
-    flex-direction: column;
     align-items: center;
 }
 
 #bpm {
-    margin-top: 10px;
+    margin-left: 10px;
     width: 80px;
 }
