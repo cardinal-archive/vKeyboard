@@ -1,4 +1,4 @@
-// Note mappings
+let audioContext;
 const notes = {
     'C4': 'audio/C4.mp3',
     'C#4': 'audio/Csharp4.mp3',
@@ -15,8 +15,7 @@ const notes = {
     'C5': 'audio/C5.mp3',
 };
 
-// Key bindings
-const keyBindings = {
+const mapKeyToNote = {
     'KeyA': 'C4',
     'KeyW': 'C#4',
     'KeyS': 'D4',
@@ -29,64 +28,74 @@ const keyBindings = {
     'KeyH': 'A4',
     'KeyU': 'A#4',
     'KeyJ': 'B4',
-    'KeyK': 'C5',
+    'KeyK': 'C5'
 };
 
-// Variables to keep track of active notes and keys
-const audioElements = {};
-const activeKeys = new Set();
+let activeNotes = {};
+let volume = 0.5; // Default volume
 
-// Function to handle key press and release
-function handleKeyPress(note, keyElement) {
-    if (!activeKeys.has(note)) {
-        activeKeys.add(note);
-        playNote(note);
-        keyElement.classList.add('active'); // Highlight the key
+document.addEventListener('mousedown', initializeAudioContext);
+document.addEventListener('keydown', handleKeyDown);
+document.addEventListener('keyup', handleKeyUp);
+document.getElementById('volume').addEventListener('input', (event) => {
+    volume = event.target.value;
+    updateVolume();
+});
+
+function initializeAudioContext() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioContext.state === 'suspended') {
+        audioContext.resume().then(() => {
+            console.log('Audio context resumed');
+        });
     }
 }
 
-function handleKeyRelease(note, keyElement) {
-    activeKeys.delete(note);
-    stopNoteIfNoSustain(note);
-    keyElement.classList.remove('active'); // Remove highlight
+function handleKeyDown(event) {
+    if (!audioContext) {
+        initializeAudioContext();
+    }
+    const note = mapKeyToNote[event.code];
+    if (note && !activeNotes[note]) {
+        playNote(note);
+        highlightKey(note, true);
+        activeNotes[note] = true;
+    }
+}
+
+function handleKeyUp(event) {
+    const note = mapKeyToNote[event.code];
+    if (note && activeNotes[note]) {
+        stopNote(note);
+        highlightKey(note, false);
+        delete activeNotes[note];
+    }
 }
 
 function playNote(note) {
-    if (!audioElements[note]) {
-        audioElements[note] = new Audio(notes[note]);
-    }
-    audioElements[note].currentTime = 0;
-    audioElements[note].play();
+    const audio = new Audio(notes[note]);
+    audio.volume = volume;
+    audio.play();
 }
 
-function stopNoteIfNoSustain(note) {
-    if (audioElements[note]) {
-        audioElements[note].pause();
-        audioElements[note].currentTime = 0;
+function stopNote() {
+    // Note stopping logic is not required with this setup, but if needed, handle here.
+}
+
+function highlightKey(note, highlight) {
+    const key = document.querySelector(`[data-note="${note}"]`);
+    if (key) {
+        key.classList.toggle('highlighted', highlight);
     }
 }
 
-// Handle mouse events for keys
-document.querySelectorAll('.key').forEach(key => {
-    const note = key.dataset.note;
-    key.addEventListener('mousedown', () => handleKeyPress(note, key));
-    key.addEventListener('mouseup', () => handleKeyRelease(note, key));
-    key.addEventListener('mouseleave', () => handleKeyRelease(note, key));
-});
-
-// Handle keyboard events
-document.addEventListener('keydown', (event) => {
-    const note = keyBindings[event.code];
-    if (note) {
-        const keyElement = document.querySelector(`.key[data-note="${note}"]`);
-        handleKeyPress(note, keyElement);
+function updateVolume() {
+    // Update volume for all currently playing notes
+    for (let note in activeNotes) {
+        const audio = new Audio(notes[note]);
+        audio.volume = volume;
+        // Need to handle actual playback elements if managed differently
     }
-});
-
-document.addEventListener('keyup', (event) => {
-    const note = keyBindings[event.code];
-    if (note) {
-        const keyElement = document.querySelector(`.key[data-note="${note}"]`);
-        handleKeyRelease(note, keyElement);
-    }
-});
+}
