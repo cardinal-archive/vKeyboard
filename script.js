@@ -1,101 +1,101 @@
-let audioContext;
-const notes = {
-    'C4': 'audio/C4.mp3',
-    'C#4': 'audio/Csharp4.mp3',
-    'D4': 'audio/D4.mp3',
-    'D#4': 'audio/Dsharp4.mp3',
-    'E4': 'audio/E4.mp3',
-    'F4': 'audio/F4.mp3',
-    'F#4': 'audio/Fsharp4.mp3',
-    'G4': 'audio/G4.mp3',
-    'G#4': 'audio/Gsharp4.mp3',
-    'A4': 'audio/A4.mp3',
-    'A#4': 'audio/Asharp4.mp3',
-    'B4': 'audio/B4.mp3',
-    'C5': 'audio/C5.mp3',
-};
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Piano</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #2c2c2c;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .piano {
+            display: flex;
+            margin-top: 20px;
+            position: relative;
+        }
+        .key {
+            width: 60px;
+            height: 200px;
+            border: 1px solid black;
+            position: relative;
+        }
+        .key.white {
+            background-color: white;
+        }
+        .key.black {
+            width: 40px;
+            height: 120px;
+            background-color: black;
+            position: absolute;
+            top: 0;
+            z-index: 2;
+        }
+        .key.white::after {
+            content: attr(data-key);
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: black;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .key.black::after {
+            content: attr(data-key);
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .key.active {
+            background-color: #ddd;
+        }
+        .key.black.active {
+            background-color: #555;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        .volume-control {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Virtual Piano</h1>
 
-const mapKeyToNote = {
-    'KeyA': 'C4',
-    'KeyW': 'C#4',
-    'KeyS': 'D4',
-    'KeyE': 'D#4',
-    'KeyD': 'E4',
-    'KeyF': 'F4',
-    'KeyT': 'F#4',
-    'KeyG': 'G4',
-    'KeyY': 'G#4',
-    'KeyH': 'A4',
-    'KeyU': 'A#4',
-    'KeyJ': 'B4',
-    'KeyK': 'C5'
-};
+    <div class="piano">
+        <div class="key white" data-note="C4" data-key="A"></div>
+        <div class="key black" data-note="C#4" data-key="W" style="left: 40px;"></div>
+        <div class="key white" data-note="D4" data-key="S"></div>
+        <div class="key black" data-note="D#4" data-key="E" style="left: 100px;"></div>
+        <div class="key white" data-note="E4" data-key="D"></div>
+        <div class="key white" data-note="F4" data-key="F"></div>
+        <div class="key black" data-note="F#4" data-key="T" style="left: 220px;"></div>
+        <div class="key white" data-note="G4" data-key="G"></div>
+        <div class="key black" data-note="G#4" data-key="Y" style="left: 280px;"></div>
+        <div class="key white" data-note="A4" data-key="H"></div>
+        <div class="key black" data-note="A#4" data-key="U" style="left: 340px;"></div>
+        <div class="key white" data-note="B4" data-key="J"></div>
+        <div class="key white" data-note="C5" data-key="K"></div>
+    </div>
 
-let activeNotes = {};
-let volume = 0.5; // Default volume
+    <div class="controls">
+        <div class="volume-control">
+            <label for="volume">Volume:</label>
+            <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5">
+        </div>
+    </div>
 
-document.addEventListener('mousedown', initializeAudioContext);
-document.addEventListener('keydown', handleKeyDown);
-document.addEventListener('keyup', handleKeyUp);
-document.getElementById('volume').addEventListener('input', (event) => {
-    volume = event.target.value;
-    updateVolume();
-});
-
-function initializeAudioContext() {
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioContext.state === 'suspended') {
-        audioContext.resume().then(() => {
-            console.log('Audio context resumed');
-        });
-    }
-}
-
-function handleKeyDown(event) {
-    if (!audioContext) {
-        initializeAudioContext();
-    }
-    const note = mapKeyToNote[event.code];
-    if (note && !activeNotes[note]) {
-        playNote(note);
-        highlightKey(note, true);
-        activeNotes[note] = true;
-    }
-}
-
-function handleKeyUp(event) {
-    const note = mapKeyToNote[event.code];
-    if (note && activeNotes[note]) {
-        stopNote(note);
-        highlightKey(note, false);
-        delete activeNotes[note];
-    }
-}
-
-function playNote(note) {
-    const audio = new Audio(notes[note]);
-    audio.volume = volume;
-    audio.play();
-}
-
-function stopNote() {
-    // Note stopping logic is not required with this setup, but if needed, handle here.
-}
-
-function highlightKey(note, highlight) {
-    const key = document.querySelector(`[data-note="${note}"]`);
-    if (key) {
-        key.classList.toggle('highlighted', highlight);
-    }
-}
-
-function updateVolume() {
-    // Update volume for all currently playing notes
-    for (let note in activeNotes) {
-        const audio = new Audio(notes[note]);
-        audio.volume = volume;
-        // Need to handle actual playback elements if managed differently
-    }
-}
+    <!-- Link to the external JavaScript file -->
+    <script src="script.js"></script>
+</body>
+</html>
