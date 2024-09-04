@@ -37,7 +37,7 @@ const keyMappings = {
     'KeyI': 'G#4',
     'KeyK': 'A4',
     'KeyO': 'A#4',
-    'KeyL': 'B5',
+    'KeyL': 'B4',
     'Semicolon': 'C5',
     'BracketLeft': 'C#5',
     'Quote': 'D5',  
