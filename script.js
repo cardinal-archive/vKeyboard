@@ -32,7 +32,8 @@ const keyMappings = {
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
-const playingNotes = new Set(); // To keep track of currently playing notes
+const playingNotes = new Set();
+const keyStates = {}; // Track key states for throttling
 
 // Preload and decode audio files
 const preloadAudio = async () => {
@@ -49,13 +50,13 @@ const playNote = (note) => {
     if (audioBuffers[note] && !playingNotes.has(note)) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[note];
-        source.connect(audioContext.destination);
+        source.connect(gainNode);
         source.start(0);
         highlightKey(note);
         playingNotes.add(note);
 
         source.onended = () => {
-            playingNotes.delete(note); // Remove note from set when sound ends
+            playingNotes.delete(note);
         };
     }
 };
@@ -77,7 +78,8 @@ document.querySelectorAll('.key').forEach(key => {
 
 document.addEventListener('keydown', (event) => {
     const note = keyMappings[event.code];
-    if (note) {
+    if (note && !keyStates[event.code]) {
+        keyStates[event.code] = true;
         playNote(note);
     }
 });
@@ -85,6 +87,7 @@ document.addEventListener('keydown', (event) => {
 document.addEventListener('keyup', (event) => {
     const note = keyMappings[event.code];
     if (note) {
+        keyStates[event.code] = false;
         document.querySelectorAll('.key').forEach(key => {
             if (key.dataset.note === note) {
                 key.classList.remove('active');
@@ -95,8 +98,7 @@ document.addEventListener('keyup', (event) => {
 
 const volumeControl = document.getElementById('volume');
 const gainNode = audioContext.createGain();
-gainNode.connect(audioContext.destination); // Connect gain node to audio context
+gainNode.connect(audioContext.destination);
 
 volumeControl.addEventListener('input', (event) => {
-    gainNode.gain.value = event.target.value;
-});
+    gainNode.gain
