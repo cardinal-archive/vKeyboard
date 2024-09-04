@@ -16,7 +16,7 @@ const keyMappings = {
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
-const activeKeys = new Set();
+const activeNodes = new Map(); // Map to keep track of active notes and their nodes
 const keyTimers = {}; // Track active timers for each key to prevent rapid firing
 
 const preloadAudio = async () => {
@@ -30,19 +30,29 @@ const preloadAudio = async () => {
 preloadAudio();
 
 const playNote = (note) => {
-    if (audioBuffers[note] && !activeKeys.has(note)) {
+    if (audioBuffers[note]) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[note];
         source.connect(audioContext.destination);
         source.start(0);
-        activeKeys.add(note);
+        
+        activeNodes.set(note, source);
         highlightKey(note);
+
+        // Clear any existing timer for this note
+        if (keyTimers[note]) {
+            clearInterval(keyTimers[note]);
+        }
     }
 };
 
 const stopNote = (note) => {
-    activeKeys.delete(note);
-    highlightKey(note, false);
+    const source = activeNodes.get(note);
+    if (source) {
+        source.stop(); // Stop the source node
+        activeNodes.delete(note); // Remove from active nodes
+        highlightKey(note, false);
+    }
 };
 
 const highlightKey = (note, highlight = true) => {
