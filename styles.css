@@ -12,8 +12,8 @@ h2 {
     font-size: 12px; /* Font size */
     font-weight: bold; /* Font weight */
     color: #4a4a4a; /* Text color */
-    margin: 8px 0; /* Margin around the heading */
-    padding: 8px; /* Padding inside the heading */
+    margin: 2px 0; /* Margin around the heading */
+    padding: 2px; /* Padding inside the heading */
     text-align: center; /* Center alignment */
     font-family: 'Arial', sans-serif; /* Font family */
     background-color: #f0f0f0; /* Background color */
