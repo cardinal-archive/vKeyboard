@@ -16,7 +16,8 @@ const keyMappings = {
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
-const activeNotes = new Set();
+const activeKeys = new Set();
+const keyTimers = {}; // Track active timers for each key to prevent rapid firing
 
 const preloadAudio = async () => {
     const fetchPromises = Object.keys(notes).map(async note => {
@@ -29,18 +30,18 @@ const preloadAudio = async () => {
 preloadAudio();
 
 const playNote = (note) => {
-    if (audioBuffers[note] && !activeNotes.has(note)) {
+    if (audioBuffers[note] && !activeKeys.has(note)) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[note];
         source.connect(audioContext.destination);
         source.start(0);
-        activeNotes.add(note);
+        activeKeys.add(note);
         highlightKey(note);
     }
 };
 
 const stopNote = (note) => {
-    activeNotes.delete(note);
+    activeKeys.delete(note);
     highlightKey(note, false);
 };
 
@@ -52,22 +53,34 @@ const highlightKey = (note, highlight = true) => {
     });
 };
 
+const handleKeyDown = (event) => {
+    const note = keyMappings[event.code];
+    if (note) {
+        if (!keyTimers[note]) {
+            playNote(note);
+            keyTimers[note] = setInterval(() => {
+                playNote(note); // Ensure the note plays again after the interval
+            }, 200); // Adjust interval as needed
+        }
+    }
+};
+
+const handleKeyUp = (event) => {
+    const note = keyMappings[event.code];
+    if (note) {
+        if (keyTimers[note]) {
+            clearInterval(keyTimers[note]); // Stop rapid firing
+            delete keyTimers[note];
+        }
+        stopNote(note);
+    }
+};
+
 document.querySelectorAll('.key').forEach(key => {
     key.addEventListener('mousedown', () => playNote(key.dataset.note));
     key.addEventListener('mouseup', () => stopNote(key.dataset.note));
     key.addEventListener('mouseleave', () => stopNote(key.dataset.note)); // Optional: stop note if mouse leaves key
 });
 
-document.addEventListener('keydown', (event) => {
-    const note = keyMappings[event.code];
-    if (note) {
-        playNote(note);
-    }
-});
-
-document.addEventListener('keyup', (event) => {
-    const note = keyMappings[event.code];
-    if (note) {
-        stopNote(note);
-    }
-});
+document.addEventListener('keydown', handleKeyDown);
+document.addEventListener('keyup', handleKeyUp);
