@@ -18,7 +18,7 @@ h2 {
     font-family: 'Arial', sans-serif; /* Font family */
     background-color: #f0f0f0; /* Background color */
     border: 1px solid #ddd; /* Border around the heading */
-    border-radius: 5px; /* Rounded corners */
+    border-radius: 2px; /* Rounded corners */
 }
 
 .piano {
